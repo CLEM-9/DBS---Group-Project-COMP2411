@@ -6,7 +6,7 @@ RELATIONAL MODEL
 	BanquetDrinks(BID, drinkName, price)
 	BanquetMeals(BID, mealName, price)
 	AttendeeBanquetRegistration(BID, email, mealName, alcoholicDrink, seatAssigned, specialNeeds, regDate, regTime, seatingPreference1, seatingPreference2)
-	
+	Administrators(adminEmail, adminName, adminPassword)
 	
 PRIMARY KEYS
 	Banquet(BID)
@@ -18,7 +18,7 @@ PRIMARY KEYS
 	AttendeeBanquetRegistration(BID, mealName)
 			# Excluding meal Name from the primary keys of the ternary realtionship ensures that a customer cannot make a double reservation just by selecting
 			# a different meal and there is no need to check for uniqueness because primary key already is
-
+    Administrators(adminEmail)
 	
 FOREIGN KEYS
 	BanquetDrinks(BID) --> Banquet(BID)
