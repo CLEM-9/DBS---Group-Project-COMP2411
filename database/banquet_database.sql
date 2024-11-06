@@ -1,60 +1,74 @@
 CREATE DATABASE IF NOT EXISTS banquet_database;
 USE banquet_database;
 
-CREATE TABLE Banquet(
-    BID INT AUTO_INCREMENT PRIMARY KEY,
-    banquetName VARCHAR(100) NOT NULL,
-    address VARCHAR(100) NOT NULL,
-    location VARCHAR(50) NOT NULL,
-    firstNameStaff VARCHAR(50) NOT NULL,
-    lastNameStaff VARCHAR(50) NOT NULL,
-    dateTime DATETIME NOT NULL,
-    available CHAR NOT NULL,
-    totalSeats INT NOT NULL
-);
-
-CREATE TABLE Attendees(
+CREATE TABLE IF NOT EXISTS RegisteredUsers(
     email VARCHAR(100) PRIMARY KEY,
     password VARCHAR(50) NOT NULL,
     address VARCHAR(100) NOT NULL,
     lastName VARCHAR(50) NOT NULL,
     firstName VARCHAR(50) NOT NULL,
-    phone CHAR(25),
+    phone CHAR(8),
     attendeeType ENUM('Student', 'Alumni', 'Staff', 'Guest') NOT NULL,
     affiliateOrganization CHAR(50),
     CHECK (email LIKE '%_@_%._%')
 );
 
-CREATE TABLE Meal(
+CREATE TABLE IF NOT EXISTS Banquet(
+    BID INT AUTO_INCREMENT PRIMARY KEY,
+    banquetName VARCHAR(100) NOT NULL,
+    address VARCHAR(100) NOT NULL,
+    location VARCHAR(50) NOT NULL,
+    staffEmail VARCHAR(100) NOT NULL,
+    banquetDate DATE NOT NULL,
+    banquetTime TIME NOT NULL,
+    available CHAR NOT NULL,
+    totalSeats INT NOT NULL,
+    FOREIGN KEY (staffEmail) REFERENCES RegisteredUsers(email)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT unique_banquet UNIQUE (address, location, banquetDate)
+);
+
+CREATE TABLE IF NOT EXISTS Meal(
     mealName VARCHAR(100) PRIMARY KEY,
     special VARCHAR(100),
     type VARCHAR(50)
 );
 
-CREATE TABLE Drink(
+CREATE TABLE IF NOT EXISTS Drink(
     drinkName VARCHAR(100) PRIMARY KEY,
     isAlcoholic ENUM('Yes', 'No')
 );
 
-CREATE TABLE BanquetDrinks(
-    BID INT PRIMARY KEY,
-    drinkName VARCHAR(100) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS BanquetDrinks(
+    BID INT,
+    drinkName VARCHAR(100),
     price INT,
-    FOREIGN KEY (BID) REFERENCES Banquet(BID),
+    PRIMARY KEY (BID, drinkName),
+    FOREIGN KEY (BID) REFERENCES Banquet(BID)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
     FOREIGN KEY (drinkName) REFERENCES Drink(drinkName)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
 );
 
-CREATE TABLE BanquetMeals(
-    BID INT PRIMARY KEY,
-    mealName VARCHAR(100) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS BanquetMeals(
+    BID INT,
+    mealName VARCHAR(100),
     price INT,
-    FOREIGN KEY (BID) REFERENCES Banquet(BID),
+    PRIMARY KEY (BID, mealName),
+    FOREIGN KEY (BID) REFERENCES Banquet(BID)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
     FOREIGN KEY (mealName) REFERENCES Meal(mealName)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
 );
 
-CREATE TABLE AttendeeBanquetRegistration(
-    BID INT PRIMARY KEY,
-    email VARCHAR(100) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
+    BID INT,
+    email VARCHAR(100),
     mealName VARCHAR(100) NOT NULL,
     alcoholicDrink ENUM('Yes', 'No') NOT NULL,
     seatAssignment INT,
@@ -62,12 +76,19 @@ CREATE TABLE AttendeeBanquetRegistration(
     regDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     seatingPreference1 VARCHAR(100),
     seatingPreference2 VARCHAR(100),
+    PRIMARY KEY (BID, email),
     CHECK (seatingPreference1 LIKE '%_@_%._%'),
     CHECK (seatingPreference2 LIKE '%_@_%._%'),
-    FOREIGN KEY (BID, mealName) REFERENCES BanquetMeals(BID, mealName)
+    FOREIGN KEY (BID) REFERENCES Banquet(BID)
+        ON DELETE CASCADE,
+    FOREIGN KEY (mealName) REFERENCES Meal(mealName)
+        ON UPDATE CASCADE,
+    FOREIGN KEY (email) REFERENCES RegisteredUsers(email)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
 
-CREATE TABLE Administrators(
+CREATE TABLE IF NOT EXISTS Administrators(
     adminEmail VARCHAR(100) PRIMARY KEY,
     adminName VARCHAR(50) NOT NULL,
     adminLastName VARCHAR(50) NOT NULL,

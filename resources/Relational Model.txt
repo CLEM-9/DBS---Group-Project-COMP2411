@@ -1,6 +1,6 @@
 RELATIONAL MODEL
 	Banquet(BID, banquetName, address, location, firstNameStaff, lastNameStaff, dateTime, available, totalSeats)
-	Attendees(email, password, address, lastName, firstName, phone#, attendeeType, affiliateOrganization)
+	RegisteredUsers(email, password, address, lastName, firstName, phone#, attendeeType, affiliateOrganization)
 	Meal(mealName, special, type)
 	Drink(drinkName, isAlcoholic)
 	BanquetDrinks(BID, drinkName, price)
@@ -10,12 +10,12 @@ RELATIONAL MODEL
 	
 PRIMARY KEYS
 	Banquet(BID)
-	Attendees(email)
+	RegisteredUsers(email)
 	Meal(mealName)
 	Drink(drinkName)
 	BanquetDrinks(BID, drinkName)
 	BanquetMeal(BID, mealName)
-	AttendeeBanquetRegistration(BID, mealName)
+	AttendeeBanquetRegistration(BID, email)
 			# Excluding meal Name from the primary keys of the ternary relationship ensures that a customer cannot make a double reservation just by selecting
 			# a different meal and there is no need to check for uniqueness because primary key already is
     Administrators(adminEmail)
@@ -28,3 +28,10 @@ FOREIGN KEYS
 	AttendeeBanquetRegistration(BID, mealName) --> BanquetMeals(BID, mealName)
 			# Refers to the BanquetMeal table relationship to make sure that no Meals outside of those provided can be added.
 	AttendeeBanquetRegistration(email) --> Attendees(email)
+
+CHECKS ON APPLICATION LEVEL
+    1) staffEmail belongs to staff
+    2) BanquetMeals gets exactly 4 entries
+    3) mail has correct format
+    4) 8 digits phone number
+    5) only english chars are accepted in the Name Field, no wildcards or numeric chars
