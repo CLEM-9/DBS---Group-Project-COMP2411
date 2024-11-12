@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS banquet_database;
 USE banquet_database;
 
-CREATE TABLE IF NOT EXISTS attendees(
+CREATE TABLE IF NOT EXISTS Attendees(
     email VARCHAR(100) PRIMARY KEY,
     password VARCHAR(50) NOT NULL,
     address VARCHAR(100) NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS Banquet(
     staffEmail VARCHAR(100) NOT NULL,
     banquetDate DATE NOT NULL,
     banquetTime TIME NOT NULL,
-    available CHAR NOT NULL,
+    available ENUM('Yes', 'No'),
     totalSeats INT NOT NULL,
     FOREIGN KEY (staffEmail) REFERENCES attendees(email)
         ON UPDATE CASCADE
