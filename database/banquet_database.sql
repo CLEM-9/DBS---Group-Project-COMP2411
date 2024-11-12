@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS banquet_database;
 USE banquet_database;
 
-CREATE TABLE IF NOT EXISTS RegisteredUsers(
+CREATE TABLE IF NOT EXISTS attendees(
     email VARCHAR(100) PRIMARY KEY,
     password VARCHAR(50) NOT NULL,
     address VARCHAR(100) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS Banquet(
     banquetTime TIME NOT NULL,
     available CHAR NOT NULL,
     totalSeats INT NOT NULL,
-    FOREIGN KEY (staffEmail) REFERENCES RegisteredUsers(email)
+    FOREIGN KEY (staffEmail) REFERENCES attendees(email)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     CONSTRAINT unique_banquet UNIQUE (address, location, banquetDate)
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
         ON DELETE CASCADE,
     FOREIGN KEY (mealName) REFERENCES Meal(mealName)
         ON UPDATE CASCADE,
-    FOREIGN KEY (email) REFERENCES RegisteredUsers(email)
+    FOREIGN KEY (email) REFERENCES attendees(email)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );
