@@ -1,5 +1,6 @@
-import mysql.connector as mysql
 from mysql.connector import Error
+from pyexpat.errors import messages
+
 
 class Database:
     def __init__(self, cursor, connection):
@@ -74,7 +75,7 @@ class Attendees(Tables):
             self.connection.commit()
             return f"{firstName} {lastName} added successfully."
         except Error as e:
-            return f"Could not add user\nError code: {e}"
+            return f"Could not create attendee\nError code: {e}"
 
     # returns an array of arrays containing all information available
     def read(self):
@@ -85,7 +86,7 @@ class Attendees(Tables):
             unpacked_result = Tables.unpack_read_info(result)
             return unpacked_result
         except Error as e:
-            print(f"Error code: {e}")
+            return f"Could not read attendee\nError code: {e}"
 
     # if the information is not provided by the user, pass None as argument
     def update(self, email, password, address, phone, attendeeType, affiliateOrganization):
@@ -93,7 +94,7 @@ class Attendees(Tables):
         values = []
         message = "Following fields are updated:\n"
 
-
+        # updates all fields that are not None
         if email is not None:
             sql = sql + "email = %s, "
             values.append(email)
@@ -127,7 +128,7 @@ class Attendees(Tables):
             self.connection.commit()
             return message
         except Error as e:
-            print(f"Error code: {e}")
+            return f"Could not update attendee\nError code: {e}"
 
     # deletes user with the primary key "email"
     def delete(self, email):
@@ -138,7 +139,7 @@ class Attendees(Tables):
             self.connection.commit()
             return "User deleted successfully."
         except Error as e:
-            print(f"Error code: {e}")
+            return f"Could not delete attendee\nError code: {e}"
 
 
 class Banquet(Tables):
@@ -154,7 +155,7 @@ class Banquet(Tables):
             self.connection.commit()
             return f"{banquetName} added successfully."
         except Error as e:
-            return f"Could not add banquet\nError code: {e}"
+            return f"Could not create banquet\nError code: {e}"
 
     # returns an array of arrays containing all information available
     def read(self):
@@ -216,7 +217,7 @@ class Banquet(Tables):
             self.connection.commit()
             return message
         except Error as e:
-            print(f"Error code: {e}")
+            return f"Could not update banquet\nError code: {e}"
 
     # deletes banquet with the primary key "BID"
     def delete(self, BID):
@@ -227,24 +228,24 @@ class Banquet(Tables):
             self.connection.commit()
             return "Banquet deleted successfully."
         except Error as e:
-            print(f"Error code: {e}")
+            return f"Could not delete banquet\nError code: {e}"
 
 class Meal(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
 
-    def create(self, mealName, special, type):
+    def create(self, mealName, special, mealType):
         sql = "INSERT INTO Meal(mealName, special, type) VALUES (%s, %s, %s)"
-        values = (mealName, special, type)
+        values = (mealName, special, mealType)
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
             return f"{mealName} added successfully."
         except Error as e:
-            return f"Could not add meal\nError code: {e}
+            return f"Could not create meal\nError code: {e}"
 
     def read(self):
-        sql = "SELECT * FROM Meals"
+        sql = "SELECT * FROM Meal"
         try:
             self.cursor.execute(sql)
             result = self.cursor.fetchall()
@@ -252,6 +253,180 @@ class Meal(Tables):
             return unpacked_result
         except Error as e:
             return f"Could not read meals\nError code: {e}"
+
+    def update(self, mealName, special, mealType):
+        sql = "UPDATE Meal SET "
+        values = []
+        message = "Following fields are updated:\n"
+
+        if special is not None:
+            sql = sql + "special = %s, "
+            values.append(special)
+            message += f"special = {special}\n"
+        if mealType is not None:
+            sql = sql + "type = %s, "
+            values.append(mealType)
+            message += f"type = {mealType}\n"
+
+        #removes the last ", "
+        sql = sql[:-2]
+        sql = sql + " WHERE mealName = %s"
+        values.append(mealName)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return message
+        except Error as e:
+            return f"Could not update meal\nError code: {e}"
+
+    def delete(self, mealName):
+        sql = "DELETE FROM Meal WHERE mealName = %s"
+        values = mealName
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{mealName} deleted successfully."
+        except Error as e:
+            return f"Could not delete meal\nError code: {e}"
+
+
+class Drink(Tables):
+    def __init__(self, cursor, connection):
+        super().__init__(cursor, connection)
+
+    def create(self, drinkName, isAlcoholic):
+        sql = "INSERT INTO Drink(drinkName, isAlcoholic) VALUES (%s, %s)"
+        values = (drinkName, isAlcoholic)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{drinkName} added successfully."
+        except Error as e:
+            return f"Could not create drink\nError code: {e}"
+
+    def read(self):
+        sql = "SELECT * FROM Drink"
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
+        except Error as e:
+            return f"Could not read drinks\nError code: {e}"
+
+    def update(self, drinkName, isAlcoholic):
+        sql = "UPDATE Drink SET isAlcoholic = %s WHERE drinkName = %s"
+        values = [isAlcoholic, drinkName]
+        message = f"Following fields are updated:\nisAlcoholic = {isAlcoholic}"
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return message
+        except Error as e:
+            return f"Could not update drink\nError code: {e}"
+
+    def delete(self, drinkName):
+        sql = "DELETE FROM Drink WHERE drinkName = %s"
+        values = drinkName
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{drinkName} deleted successfully."
+        except Error as e:
+            return f"Could not delete drink\nError code: {e}"
+
+
+class BanquetDrinks(Tables):
+    def __init__(self, cursor, connection):
+        super().__init__(cursor, connection)
+
+    def create(self, BID, drinkName, price):
+        sql = "INSERT INTO BanquetDrinks(BID, drinkName, price) FROM VALUES (%s, %s, %s)"
+        values = (BID, drinkName, price)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{BID, drinkName} added successfully."
+        except Error as e:
+            return f"Could not create Drink in Banquet\nError code: {e}"
+
+    def read(self):
+        sql = "SELECT * FROM BanquetDrinks"
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
+        except Error as e:
+            return f"Could not read BanquetDrinks\nError code: {e}"
+
+    def update(self, BID, drinkName, price):
+        sql = "UPDATE BanquetDrinks SET price = %s WHERE BID = %s AND drinkName = %s"
+        values = (price, BID, drinkName)
+        message = f"Following fields are updated:\nprice = {price}"
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return message
+        except Error as e:
+            return f"Could not update Drink in Banquet\nError code: {e}"
+
+    def delete(self, BID, drinkName):
+        sql = "DELETE FROM BanquetDrinks WHERE BID = %s AND drinkName = %s"
+        values = (BID, drinkName)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{BID, drinkName} deleted successfully."
+        except Error as e:
+            return f"Could not delete Drink from Banquet\nError code: {e}"
+
+
+class BanquetMeal(Tables):
+    def __init__(self, cursor, connection):
+        super().__init__(cursor, connection)
+
+    def create(self, BID, mealName, price):
+        sql = "INSERT INTO BanquetMeals(BID, mealName, price) FROM VALUES (%s, %s, %s)"
+        values = (BID, mealName, price)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{BID, mealName} added successfully."
+        except Error as e:
+            return f"Could not create Meal in Banquet\nError code: {e}"
+
+    def read(self):
+        sql = "SELECT * FROM BanquetMeals"
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
+        except Error as e:
+            return f"Could not read BanquetMeals\nError code: {e}"
+
+    def update(self, BID, mealName, price):
+        sql = "UPDATE BanquetDrinks SET price = %s WHERE BID = %s AND mealName = %s"
+        values = (price, BID, mealName)
+        message = f"Following fields are updated:\nprice = {price}"
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return message
+        except Error as e:
+            return f"Could not update Meal in Banquet\nError code: {e}"
+
+    def delete(self, BID, mealName):
+        sql = "DELETE FROM BanquetDrinks WHERE BID = %s AND mealName = %s"
+        values = (BID, mealName)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{BID, mealName} deleted successfully."
+        except Error as e:
+            return f"Could not delete Meal from Banquet\nError code: {e}"
+
 
 
 
