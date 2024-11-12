@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS banquet_database;
 USE banquet_database;
 
 CREATE TABLE IF NOT EXISTS RegisteredUsers(
-    email VARCHAR(100) PRIMARY KEY,
+    email VARCHAR(100),
     password VARCHAR(50) NOT NULL,
     address VARCHAR(100) NOT NULL,
     lastName VARCHAR(50) NOT NULL,

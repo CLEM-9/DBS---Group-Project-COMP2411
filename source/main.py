@@ -4,10 +4,11 @@ import mysql.connector
 from source.connection import Connection
 
 if __name__ == '__main__':
-    database = input('Enter your database name: ')
-    user = input('Enter your username: ')
+    database = "banquet_database"
+    user = "test_user"
     password = input('Enter your password: ')
     accessStatus = True
+
     try:
         access1 = Connection(user, password, database)
     except mysql.connector.Error as err:
