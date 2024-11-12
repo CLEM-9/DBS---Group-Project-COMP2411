@@ -43,7 +43,7 @@ class Database:
         try:
             self.cursor.execute("DROP DATABASE IF EXISTS banquet_database")
         except Error as e:
-            print(f"Error: {e}")
+            print(f"Error code: {e}")
         finally:
             self.cursor.close()
             self.connection.close()
@@ -52,19 +52,32 @@ class Tables:
     def __init__(self, cursor, connection):
         self.cursor = cursor
         self.connection = connection
+        self.table_name = ""
 
     # gets the fetched result from the read operation and unpacks it in a string before return
     @staticmethod
     def unpack_read_info(info):
         message = ""
         for line in info:
-            message = message + line + "\n"
+            for item in line:
+                message = message + item + ", "
+            message = message + "\n"
         return message
+
+    def delete_all_entries(self):
+        try:
+            sql = f"DELETE FROM {self.table_name}"
+            self.cursor.execute(sql)
+            self.connection.commit()
+            print(f"Successfully deleted all entries from {self.table_name} table")
+        except Error as e:
+            print(f"Error code : {e}")
 
 
 class Attendees(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
+        self.table_name = "Attendees"
 
     # creates users
     def create(self, email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization):
@@ -89,7 +102,10 @@ class Attendees(Tables):
             return f"Could not read attendee\nError code: {e}"
 
     # if the information is not provided by the user, pass None as argument
-    def update(self, email, password, address, phone, attendeeType, affiliateOrganization):
+    def update(self, emailID, email, password, address, phone, attendeeType, affiliateOrganization):
+        if emailID is None:
+            return "Email ID is required to update attendee"
+
         sql = "UPDATE Attendees SET "
         values = []
         message = "Following fields are updated:\n"
@@ -123,6 +139,7 @@ class Attendees(Tables):
         # removes the last ", "
         sql = sql[:-2]
         sql = sql + " WHERE email = %s"
+        values.append(emailID)
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -133,7 +150,7 @@ class Attendees(Tables):
     # deletes user with the primary key "email"
     def delete(self, email):
         sql = "DELETE FROM Attendees WHERE email = %s"
-        values = email
+        values = [email]
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -145,6 +162,7 @@ class Attendees(Tables):
 class Banquet(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
+        self.table_name = "Banquet"
 
     # creates new banquet entry, banquetID is handled automatically by the database
     def create(self, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats):
@@ -222,7 +240,7 @@ class Banquet(Tables):
     # deletes banquet with the primary key "BID"
     def delete(self, BID):
         sql = "DELETE FROM Banquet WHERE BID = %s"
-        values = BID
+        values = [BID]
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -233,6 +251,7 @@ class Banquet(Tables):
 class Meal(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
+        self.table_name = "Meal"
 
     def create(self, mealName, special, mealType):
         sql = "INSERT INTO Meal(mealName, special, type) VALUES (%s, %s, %s)"
@@ -281,7 +300,7 @@ class Meal(Tables):
 
     def delete(self, mealName):
         sql = "DELETE FROM Meal WHERE mealName = %s"
-        values = mealName
+        values = [mealName]
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -293,6 +312,7 @@ class Meal(Tables):
 class Drink(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
+        self.table_name = "Drink"
 
     def create(self, drinkName, isAlcoholic):
         sql = "INSERT INTO Drink(drinkName, isAlcoholic) VALUES (%s, %s)"
@@ -327,7 +347,7 @@ class Drink(Tables):
 
     def delete(self, drinkName):
         sql = "DELETE FROM Drink WHERE drinkName = %s"
-        values = drinkName
+        values = [drinkName]
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -339,6 +359,7 @@ class Drink(Tables):
 class BanquetDrinks(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
+        self.table_name = "BanquetDrinks"
 
     def create(self, BID, drinkName, price):
         sql = "INSERT INTO BanquetDrinks(BID, drinkName, price) FROM VALUES (%s, %s, %s)"
@@ -373,7 +394,7 @@ class BanquetDrinks(Tables):
 
     def delete(self, BID, drinkName):
         sql = "DELETE FROM BanquetDrinks WHERE BID = %s AND drinkName = %s"
-        values = (BID, drinkName)
+        values = [BID, drinkName]
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -385,6 +406,7 @@ class BanquetDrinks(Tables):
 class BanquetMeal(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
+        self.table_name = BanquetMeal
 
     def create(self, BID, mealName, price):
         sql = "INSERT INTO BanquetMeals(BID, mealName, price) FROM VALUES (%s, %s, %s)"
@@ -419,13 +441,148 @@ class BanquetMeal(Tables):
 
     def delete(self, BID, mealName):
         sql = "DELETE FROM BanquetDrinks WHERE BID = %s AND mealName = %s"
-        values = (BID, mealName)
+        values = [BID, mealName]
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
             return f"{BID, mealName} deleted successfully."
         except Error as e:
             return f"Could not delete Meal from Banquet\nError code: {e}"
+
+class UserBanquetRegistration(Tables):
+    def __init__(self, cursor, connection):
+        super().__init__(cursor, connection)
+        self.table_name = "UserBanquetRegistration"
+
+    def create(self, BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2):
+        sql = "INSERT INTO UserBanquetRegistration(BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2 FROM VALUES (%s, %s, %s, %s, %s, %s, %s ,%s))"
+        values = (BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{BID, mealName} added successfully."
+        except Error as e:
+            return f"Could not register Attendee to Banquet\nError code: {e}"
+
+    def read(self):
+        sql = "SELECT * FROM UserBanquetRegistration"
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
+        except Error as e:
+            return f"Could not read UserBanquetRegistration\nError code: {e}"
+
+    def update(self, BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2):
+        sql = "UPDATE UserBanquetRegistration SET "
+        values = []
+        message = "Following fields are updated:\n"
+
+        #appends all the information fields that need to be updated
+        if mealName is not None:
+            sql = sql + "mealName = %s"
+            values.append(mealName)
+            message += f"mealName = {mealName}\n"
+        if alcoholicDrink is not None:
+            sql = sql + "alcoholicDrink = %s"
+            values.append(alcoholicDrink)
+            message += f"alcoholicDrink = {alcoholicDrink}\n"
+        if specialNeeds is not None:
+            sql = sql + "specialNeeds = %s"
+            values.append(specialNeeds)
+            message += f"specialNeeds = {specialNeeds}\n"
+        if seatingPref1 is not None:
+            sql = sql + "seatingPref1 = %s"
+            values.append(seatingPref1)
+            message += f"seatingPref1 = {seatingPref1}\n"
+        if seatingPref2 is not None:
+            sql = sql + "seatingPref2 = %s"
+            values.append(seatingPref2)
+            message += f"seatingPref2 = {seatingPref2}\n"
+
+        # removes last ", "
+        sql = sql[:-2]
+        sql = sql + "WHERE BID = %s AND email = %s"
+        values.append(BID)
+        values.append(email)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return message
+        except Error as e:
+            return f"Could not update User Registration in Banquet\nError code: {e}"
+
+    def delete(self, BID, email):
+        sql = "DELETE FROM UserBanquetRegistration WHERE BID = %s AND email = %s"
+        values = [BID, email]
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return "User Registration deleted successfully from Banquet."
+        except Error as e:
+            return f"Could not delete User Registration from Banquet\nError code: {e}"
+
+class Administrators(Tables):
+    def __init__(self, cursor, connection):
+        super().__init__(cursor, connection)
+        self.table_name = "Administrators"
+
+    def create(self, adminEmail, adminName, adminLastName, adminPassword):
+        sql = "INSERT INTO Administrators(adminEmail, adminName, adminLastName, adminPassword) FROM VALUES (%s, %s, %s, %s)"
+        values = (adminEmail, adminName, adminLastName, adminPassword)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"{adminName} {adminLastName} added successfully to Admins."
+        except Error as e:
+            return f"Could not create Administrator\nError code: {e}"
+
+    def read(self):
+        sql = "SELECT * FROM Administrators"
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
+        except Error as e:
+            return f"Could not read Administrators\nError code: {e}"
+
+    def update(self, adminEmail, adminPassword):
+        sql = "UPDATE Administrators SET"
+        values = []
+        message = "Following fields are updated:\n"
+
+        # appends all the information fields that need to be updated
+        if adminEmail is not None:
+            sql = sql + "adminEmail = %s"
+            values.append(adminEmail)
+            message += f"adminEmail = {adminEmail}\n"
+        if adminPassword is not None:
+            sql = sql + "adminPassword = %s"
+            values.append(adminPassword)
+            message += f"adminPassword = {adminPassword}\n"
+
+        # removes last ", "
+        sql = sql[:-2]
+        sql = sql + "WHERE AdminEmail = %s"
+        values.append(adminEmail)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return message
+        except Error as e:
+            return f"Could not update admin information\nError code: {e}"
+
+    def delete(self, adminEmail):
+        sql = "DELETE FROM Administrators WHERE AdminEmail = %s"
+        values = [adminEmail]
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"Administrator {adminEmail} deleted successfully."
+        except Error as e:
+            return f"Could not delete Administrator\nError code: {e}"
 
 
 

@@ -1,7 +1,7 @@
 from db_connection import get_db_connection
 import mysql.connector as mysql
 from mysql.connector import Error
-from crud_operations import register, check_email, drop_database
+from crud_operations import *
 from db_setup import initialize_database
 
 def register_attendee():
@@ -35,7 +35,7 @@ def login():
     email = input("Enter Email: ")
     password = input("Enter Password: ")
 
-    result =check_email(cursor, connection, email, password)
+    result = check_email(cursor, connection, email, password)
 
     return result
 

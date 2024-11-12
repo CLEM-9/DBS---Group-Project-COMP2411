@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS Banquet(
     banquetTime TIME NOT NULL,
     available ENUM('Yes', 'No'),
     totalSeats INT NOT NULL,
-    FOREIGN KEY (staffEmail) REFERENCES attendees(email)
+    FOREIGN KEY (staffEmail) REFERENCES Attendees(email)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     CONSTRAINT unique_banquet UNIQUE (address, location, banquetDate)
@@ -47,10 +47,10 @@ CREATE TABLE IF NOT EXISTS BanquetDrinks(
     PRIMARY KEY (BID, drinkName),
     FOREIGN KEY (BID) REFERENCES Banquet(BID)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+        ON DELETE CASCADE,
     FOREIGN KEY (drinkName) REFERENCES Drink(drinkName)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS BanquetMeals(
@@ -60,10 +60,10 @@ CREATE TABLE IF NOT EXISTS BanquetMeals(
     PRIMARY KEY (BID, mealName),
     FOREIGN KEY (BID) REFERENCES Banquet(BID)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+        ON DELETE CASCADE,
     FOREIGN KEY (mealName) REFERENCES Meal(mealName)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
         ON DELETE CASCADE,
     FOREIGN KEY (mealName) REFERENCES Meal(mealName)
         ON UPDATE CASCADE,
-    FOREIGN KEY (email) REFERENCES attendees(email)
+    FOREIGN KEY (email) REFERENCES Attendees(email)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );
