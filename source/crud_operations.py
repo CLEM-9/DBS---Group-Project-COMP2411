@@ -1,3 +1,6 @@
+import mysql.connector as mysql
+from mysql.connector import Error
+
 class RegisteredUsers:
     def __init__(self, cursor, connection):
         self.cursor = cursor
@@ -36,8 +39,6 @@ class RegisteredUsers:
         if affiliateOrganization is not None:
             sql = sql + "affiliateOrganization = %s, "
 
-
-
     # deletes user with the primary key "email"
     def delete(self, email):
         sql = "DELETE FROM RegisteredUsers WHERE email = %s"
@@ -45,8 +46,6 @@ class RegisteredUsers:
         self.cursor.execute(sql, values)
         self.connection.commit()
         return "User deleted successfully."
-import mysql.connector as mysql
-from mysql.connector import Error
 
 def register(cursor, connection,email, password, address, last_name, first_name, phone, attendee_type, affiliate_organization):
     try:
