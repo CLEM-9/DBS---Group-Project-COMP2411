@@ -88,7 +88,7 @@ def initialize_database():
     connection = mysql.connector.connect(
         host='localhost',
         user='root',
-        password='Iloveme!182409'
+        password='password'
     )
     cursor = connection.cursor()
 
