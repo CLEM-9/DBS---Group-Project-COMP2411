@@ -9,8 +9,6 @@ class Database:
 
     # checks if logging_in user is attendee or administrator
     def check_email(self, connection, email, password):
-        attendee = 2
-        admin = 1
         try:
             self.cursor.execute(
                 "SELECT * FROM Attendees WHERE email = %s AND password = %s",
@@ -24,13 +22,12 @@ class Database:
             if_admin = self.cursor.fetchone()
             if if_attendee:
                 print("Login successful!")
-                return attendee
+                return ["Attendee", if_attendee[0], if_attendee[1], if_attendee[2], if_attendee[3], if_attendee[4], if_attendee[5], if_attendee[6], if_attendee[7]]
             elif if_admin:
                 print("Login successful!")
-                return admin
+                return ["Administrator", if_admin[0], if_admin[1], if_admin[2], if_admin[3]]
             else:
                 print("Login failed. Please try again.")
-                return 0
 
         except Error as e:
             print(f"Error code: {e}")
@@ -39,6 +36,21 @@ class Database:
             self.cursor.close()
             connection.close()
 
+    def check_email_exists(self, connection, email):
+        try:
+            self.cursor.execute(
+                "SELECT * FROM Attendees WHERE email = %s", (email) )
+            if_attendee = self.cursor.fetchone()
+            self.cursor.execute(
+                "SELECT * FROM Administrators WHERE adminEmail = %s", (email) )
+            if_admin = self.cursor.fetchone()
+            if if_attendee or if_admin:
+                return True
+            else:
+                return False
+        except Error as e:
+            print(f"Error code: {e}")
+                
     def drop_database(self):
         try:
             self.cursor.execute("DROP DATABASE IF EXISTS banquet_database")
@@ -81,15 +93,27 @@ class Attendees(Tables):
 
     # creates users
     def create(self, email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization):
-        sql = "INSERT INTO Attendees(email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        values = (email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization)
+        sql = """INSERT INTO Attendees(
+            email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+        values = (
+            str(email),
+            str(password),
+            str(address),
+            str(lastName),
+            str(firstName),
+            str(phone) if phone else None,
+            str(attendeeType),
+            str(affiliateOrganization) if affiliateOrganization else None,
+        )
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
             return f"{firstName} {lastName} added successfully."
         except Error as e:
+            import traceback
+            traceback.print_exc()
             return f"Could not create attendee\nError code: {e}"
-
     # returns an array of arrays containing all information available
     def read(self):
         sql = "SELECT * FROM Attendees"
@@ -103,9 +127,7 @@ class Attendees(Tables):
 
     # if the information is not provided by the user, pass None as argument
     def update(self, emailID, email, password, address, phone, attendeeType, affiliateOrganization):
-        if emailID is None:
-            return "Email ID is required to update attendee"
-
+    
         sql = "UPDATE Attendees SET "
         values = []
         message = "Following fields are updated:\n"

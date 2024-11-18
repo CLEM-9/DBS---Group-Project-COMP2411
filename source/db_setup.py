@@ -14,7 +14,7 @@ TABLES = {
         "  phone CHAR(8),"
         "  attendeeType ENUM('Student', 'Alumni', 'Staff', 'Guest') NOT NULL,"
         "  affiliateOrganization CHAR(50),"
-        "  CHECK (email LIKE '%_@_%._%')"
+        "  CHECK (email LIKE '%@%.__%')"
         ")"
     ),
     'Administrators': (
