@@ -70,7 +70,26 @@ TABLES = {
         "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE,"
         "  FOREIGN KEY (email) REFERENCES attendees(email) ON UPDATE CASCADE ON DELETE CASCADE"
         ")"
+    ),
+    'BanquetMeals': (
+        "CREATE TABLE IF NOT EXISTS BanquetMeals ("
+        "  BID INT,"
+        "  mealName VARCHAR(100),"
+        "  PRIMARY KEY (BID, mealName),"
+        "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
+        "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE ON DELETE CASCADE"
+        ")"
+    ),
+    'BanquetDrinks': (
+        "CREATE TABLE IF NOT EXISTS BanquetDrinks ("
+        "  BID INT,"
+        "  drinkName VARCHAR(100),"
+        "  PRIMARY KEY (BID, drinkName),"
+        "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
+        "  FOREIGN KEY (drinkName) REFERENCES Drink(drinkName) ON UPDATE CASCADE ON DELETE CASCADE"
+        ")"
     )
+    
 }
 
 def create_database(cursor):
@@ -144,6 +163,32 @@ def insert_test_data(cursor):
                 "INSERT INTO Drink (drinkName, isAlcoholic) "
                 "VALUES ('Red Wine', 'Yes'),"
                 "       ('Sparkling Water', 'No')"
+            )
+            
+        cursor.execute("SELECT COUNT(*) FROM UserBanquetRegistration")
+        reg_count = cursor.fetchone()[0]
+        if reg_count == 0:
+            cursor.execute(
+                "INSERT INTO UserBanquetRegistration (BID, email, mealName, alcoholicDrink, seatAssignment, specialNeeds, seatingPreference1, seatingPreference2) "
+                "VALUES (1, 'johndoe@example.com', 'Vegan Plate', 'No', 1, 'None', 'Front', 'Back')"
+            )
+        
+        cursor.execute("SELECT COUNT(*) FROM BanquetMeals")
+        meal_count = cursor.fetchone()[0]
+        if meal_count == 0:
+            cursor.execute(
+                "INSERT INTO BanquetMeals (BID, mealName) "
+                "VALUES (1, 'Vegan Plate'),"
+                "       (1, 'Chicken Dish')"
+            )
+        
+        cursor.execute("SELECT COUNT(*) FROM BanquetDrinks")
+        drink_count = cursor.fetchone()[0]
+        if drink_count == 0:
+            cursor.execute(
+                "INSERT INTO BanquetDrinks (BID, drinkName) "
+                "VALUES (1, 'Red Wine'),"
+                "       (1, 'Sparkling Water')"
             )
         
         print("Test data inserted successfully.")

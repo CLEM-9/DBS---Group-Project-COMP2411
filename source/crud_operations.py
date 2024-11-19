@@ -66,8 +66,10 @@ class Tables:
         message = ""
         for line in info:
             for item in line:
-                message = message + item + ", "
+                message = message + str(item) + ", "
             message = message + "\n"
+        #delete last \n
+        message = message[:-1]
         return message
 
     def delete_all_entries(self):
@@ -308,6 +310,16 @@ class Banquet(Tables):
         except Error as e:
             return f"Could not read banquets\nError code: {e}"
 
+    def read_by_id(self, BID):
+        sql = "SELECT * FROM Banquet WHERE BID = %s"
+        values = [BID]
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            return result
+        except Error as e:
+            return f"Could not read banquet\nError code: {e}"
+        
     # if the information is not provided by the user, pass None as argument
     def update(self, BID, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats):
         sql = "UPDATE Banquets SET "
@@ -503,6 +515,17 @@ class BanquetDrinks(Tables):
         except Error as e:
             return f"Could not read BanquetDrinks\nError code: {e}"
 
+    def show_drinks(self, BID):
+        sql = "SELECT drinkName FROM BanquetDrinks WHERE BID = %s"
+        values = [BID]
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
+        except Error as e:
+            return f"Could not read BanquetDrinks\nError code"
+        
     def update(self, BID, drinkName, price):
         sql = "UPDATE BanquetDrinks SET price = %s WHERE BID = %s AND drinkName = %s"
         values = (price, BID, drinkName)
@@ -549,9 +572,20 @@ class BanquetMeal(Tables):
             return unpacked_result
         except Error as e:
             return f"Could not read BanquetMeals\nError code: {e}"
-
+        
+    def show_meals(self, BID):
+        sql = "SELECT mealName FROM BanquetMeals WHERE BID = %s"
+        values = [BID]
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
+        except Error as e:
+            return f"Could not read BanquetMeals\nError code"
+        
     def update(self, BID, mealName, price):
-        sql = "UPDATE BanquetDrinks SET price = %s WHERE BID = %s AND mealName = %s"
+        sql = "UPDATE BanquetMeals SET price = %s WHERE BID = %s AND mealName = %s"
         values = (price, BID, mealName)
         message = f"Following fields are updated:\nprice = {price}"
         try:
@@ -577,15 +611,64 @@ class UserBanquetRegistration(Tables):
         self.table_name = "UserBanquetRegistration"
 
     def create(self, BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2):
-        sql = "INSERT INTO UserBanquetRegistration(BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2 FROM VALUES (%s, %s, %s, %s, %s, %s, %s ,%s))"
-        values = (BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2)
+        # Default values for optional fields
+        specialNeeds = specialNeeds or "None"
+        seatingPref1 = seatingPref1 or "None"
+        seatingPref2 = seatingPref2 or "None"
+
+        # SQL query to fetch the next seat assignment
+        seat_no_query = "SELECT COALESCE(MAX(seatAssignment), 0) + 1 AS nextSeat FROM UserBanquetRegistration"
+
+        # SQL query to insert a new registration
+        sql_insert = """
+        INSERT INTO UserBanquetRegistration
+        (BID, email, mealName, alcoholicDrink, seatAssignment, specialNeeds, seatingPreference1, seatingPreference2)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        # SQL query to decrement the available seats for the banquet
+        sql_update_seats = """
+        UPDATE Banquet
+        SET totalSeats = totalSeats - 1
+        WHERE BID = %s AND totalSeats > 0
+        """
+
+        try:
+            # Fetch the next seat number
+            self.cursor.execute(seat_no_query)
+            seat_no = self.cursor.fetchone()[0]  # Retrieve the next seat number
+            
+            # Insert the registration
+            self.cursor.execute(
+                sql_insert,
+                (BID, email, mealName, alcoholicDrink, seat_no, specialNeeds, seatingPref1, seatingPref2)
+            )
+            
+            # Decrement the total seats, ensure no negative seats
+            affected_rows = self.cursor.execute(sql_update_seats, (BID,))
+            if affected_rows == 0:
+                raise ValueError("No available seats left for this banquet.")
+            
+            # Commit the transaction
+            self.connection.commit()
+            return f"Registration successful! Assigned Seat: {seat_no}. Banquet {BID}, Meal: {mealName}."
+
+        except Exception as e:
+            # Roll back the transaction in case of any error
+            self.connection.rollback()
+            return f"Could not register Attendee to Banquet\nError code: {e}"
+            
+    def read_by_user(self, email):
+        sql = "SELECT * FROM UserBanquetRegistration WHERE email = %s"
+        values = [email]
         try:
             self.cursor.execute(sql, values)
-            self.connection.commit()
-            return f"{BID, mealName} added successfully."
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
         except Error as e:
-            return f"Could not register Attendee to Banquet\nError code: {e}"
-
+            return f"Could not read UserBanquetRegistration\nError code: {e}" 
+        
     def read(self):
         sql = "SELECT * FROM UserBanquetRegistration"
         try:
