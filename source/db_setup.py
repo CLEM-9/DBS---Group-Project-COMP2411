@@ -109,8 +109,7 @@ def initialize_database(connection, cursor):
         
         for table_name, table_sql in TABLES.items():
             cursor.execute(table_sql)
-            print(f"Created table {table_name}.")
-        
+        print("Database initialized successfully.")
         insert_test_data(cursor)
 
     except Error as err:

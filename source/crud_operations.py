@@ -684,33 +684,33 @@ class UserBanquetRegistration(Tables):
         values = []
         message = "Following fields are updated:\n"
 
-        #appends all the information fields that need to be updated
-        if mealName is not None:
-            sql = sql + "mealName = %s"
+        # Append fields dynamically if they are not None
+        if mealName:
+            sql += "mealName = %s, "
             values.append(mealName)
             message += f"mealName = {mealName}\n"
-        if alcoholicDrink is not None:
-            sql = sql + "alcoholicDrink = %s"
+        if alcoholicDrink:
+            sql += "alcoholicDrink = %s, "
             values.append(alcoholicDrink)
             message += f"alcoholicDrink = {alcoholicDrink}\n"
-        if specialNeeds is not None:
-            sql = sql + "specialNeeds = %s"
+        if specialNeeds:
+            sql += "specialNeeds = %s, "
             values.append(specialNeeds)
             message += f"specialNeeds = {specialNeeds}\n"
-        if seatingPref1 is not None:
-            sql = sql + "seatingPref1 = %s"
+        if seatingPref1:
+            sql += "seatingPreference1 = %s, "
             values.append(seatingPref1)
-            message += f"seatingPref1 = {seatingPref1}\n"
-        if seatingPref2 is not None:
-            sql = sql + "seatingPref2 = %s"
+            message += f"seatingPreference1 = {seatingPref1}\n"
+        if seatingPref2:
+            sql += "seatingPreference2 = %s, "
             values.append(seatingPref2)
-            message += f"seatingPref2 = {seatingPref2}\n"
+            message += f"seatingPreference2 = {seatingPref2}\n"
 
-        # removes last ", "
-        sql = sql[:-2]
-        sql = sql + "WHERE BID = %s AND email = %s"
+        # Remove the last comma and space, then add WHERE clause
+        sql = sql.rstrip(", ") + " WHERE BID = %s AND email = %s"
         values.append(BID)
         values.append(email)
+
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
