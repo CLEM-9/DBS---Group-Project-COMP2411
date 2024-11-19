@@ -32,10 +32,6 @@ class Database:
         except Error as e:
             print(f"Error code: {e}")
 
-        finally:
-            self.cursor.close()
-            connection.close()
-
     def check_email_exists(self, connection, email):
         try:
             self.cursor.execute(
@@ -56,9 +52,7 @@ class Database:
             self.cursor.execute("DROP DATABASE IF EXISTS banquet_database")
         except Error as e:
             print(f"Error code: {e}")
-        finally:
-            self.cursor.close()
-            self.connection.close()
+
 
 class Tables:
     def __init__(self, cursor, connection):
@@ -169,6 +163,75 @@ class Attendees(Tables):
         except Error as e:
             return f"Could not update attendee\nError code: {e}"
 
+    def update_everything(self, email, password, phone, firstName, lastName, address, attendeeType, affiliateOrganization, emailID):    
+        sql = "UPDATE Attendees SET "
+        values = []
+        message = "Following fields are updated:\n"
+
+        # Normalize inputs
+        email = email.strip() if email else None
+        password = password.strip() if password else None
+        phone = phone.strip() if phone else None
+        firstName = firstName.strip().title() if firstName else None
+        lastName = lastName.strip().title() if lastName else None
+        address = address.strip() if address else None
+        attendeeType = attendeeType.strip().title() if attendeeType else None
+        affiliateOrganization = affiliateOrganization.strip() if affiliateOrganization else None
+
+        # Update fields dynamically
+        if email:
+            sql = sql + "email = %s, "
+            values.append(email)
+            message += f"email = {email}\n"
+        if password:
+            sql = sql + "password = %s, "
+            values.append(password)
+            message += f"password = {password}\n"
+        if phone:
+            sql = sql + "phone = %s, "
+            values.append(phone)
+            message += f"phone = {phone}\n"
+        if firstName:
+            sql = sql + "firstName = %s, "
+            values.append(firstName)
+            message += f"firstName = {firstName}\n"
+        if lastName:
+            sql = sql + "lastName = %s, "
+            values.append(lastName)
+            message += f"lastName = {lastName}\n"
+        if address:
+            sql = sql + "address = %s, "
+            values.append(address)
+            message += f"address = {address}\n"
+        if attendeeType:
+            try:
+                sql = sql + "attendeeType = %s, "
+                values.append(attendeeType)
+                message += f"attendeeType = {attendeeType}\n"
+            except ValueError as e:
+                return str(e)
+        if affiliateOrganization:
+            sql = sql + "affiliateOrganization = %s, "
+            values.append(affiliateOrganization)
+            message += f"affiliateOrganization = {affiliateOrganization}\n"
+
+        # Check if there are fields to update
+        if not values:
+            return "No fields to update. Please provide at least one field to update."
+
+        # Finalize the SQL query
+        sql = sql[:-2]  # Remove trailing ", "
+        sql = sql + " WHERE email = %s"
+        values.append(emailID)
+
+        # Execute the query
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return message
+        except Error as e:
+            return f"Could not update attendee\nError code: {e}"
+        
     # deletes user with the primary key "email"
     def delete(self, email):
         sql = "DELETE FROM Attendees WHERE email = %s"
@@ -199,12 +262,49 @@ class Banquet(Tables):
 
     # returns an array of arrays containing all information available
     def read(self):
-        sql = "SELECT * FROM Banquets"
+        sql = "SELECT * FROM Banquet"
         try:
             self.cursor.execute(sql)
             result = self.cursor.fetchall()
             unpacked_result = Tables.unpack_read_info(result)
             return unpacked_result
+        except Error as e:
+            return f"Could not read banquets\nError code: {e}"
+
+    def read_by_filter(self, banquetName, banquetDate, banquetLocation, address):
+        sql = "SELECT * FROM Banquet WHERE "
+        values = []
+        message = "Following fields are filtered:\n"
+
+        banquetName = banquetName.strip() if banquetName else None
+        banquetDate = banquetDate if banquetDate else None
+        banquetLocation = banquetLocation.strip() if banquetLocation else None
+        address = address.strip() if address else None
+        
+        # appends all the information fields that need to be filtered
+        if banquetName is not None:
+            sql = sql + "banquetName = %s, "
+            values.append(banquetName)
+            message += f"banquetName = {banquetName}\n"
+        if banquetDate is not None:
+            sql = sql + "banquetDate = %s, "
+            values.append(banquetDate)
+            message += f"banquetDate = {banquetDate}\n"
+        if banquetLocation is not None:
+            sql = sql + "location = %s, "
+            values.append(banquetLocation)
+            message += f"location = {banquetLocation}\n"
+        if address is not None:
+            sql = sql + "address = %s, "
+            values.append(address)
+            message += f"adress = {address}\n"
+
+        # removes the last ", "
+        sql = sql[:-2]
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            return result
         except Error as e:
             return f"Could not read banquets\nError code: {e}"
 

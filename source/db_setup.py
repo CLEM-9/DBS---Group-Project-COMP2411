@@ -1,5 +1,5 @@
 import mysql.connector
-from mysql.connector import errorcode, Error
+from mysql.connector import Error
 
 DB_NAME = 'banquet_database'
 
@@ -54,28 +54,25 @@ TABLES = {
         "  isAlcoholic ENUM('Yes', 'No')"
         ")"
     ),
-    'UserBanquetRegistration' : (
-    "CREATE TABLE IF NOT EXISTS UserBanquetRegistration ("
-    "  BID INT,"
-    "  email VARCHAR(100),"
-    "  mealName VARCHAR(100) NOT NULL,"
-    "  alcoholicDrink ENUM('Yes', 'No') NOT NULL,"
-    "  seatAssignment INT,"
-    "  specialNeeds VARCHAR(128),"
-    "  regDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-    "  seatingPreference1 VARCHAR(100),"
-    "  seatingPreference2 VARCHAR(100),"
-    "  PRIMARY KEY (BID, email),"
-    "  CHECK (seatingPreference1 LIKE '%_@_%._%'),"
-    "  CHECK (seatingPreference2 LIKE '%_@_%._%'),"
-    "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE,"
-    "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE,"
-    "  FOREIGN KEY (email) REFERENCES attendees(email) ON UPDATE CASCADE ON DELETE CASCADE"
-    ")"
+    'UserBanquetRegistration': (
+        "CREATE TABLE IF NOT EXISTS UserBanquetRegistration ("
+        "  BID INT,"
+        "  email VARCHAR(100),"
+        "  mealName VARCHAR(100) NOT NULL,"
+        "  alcoholicDrink ENUM('Yes', 'No') NOT NULL,"
+        "  seatAssignment INT,"
+        "  specialNeeds VARCHAR(128),"
+        "  regDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+        "  seatingPreference1 VARCHAR(100),"
+        "  seatingPreference2 VARCHAR(100),"
+        "  PRIMARY KEY (BID, email),"
+        "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE,"
+        "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE,"
+        "  FOREIGN KEY (email) REFERENCES attendees(email) ON UPDATE CASCADE ON DELETE CASCADE"
+        ")"
     )
 }
 
-# Function to create the database
 def create_database(cursor):
     try:
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME} DEFAULT CHARACTER SET 'utf8'")
@@ -83,15 +80,10 @@ def create_database(cursor):
         print(f"Failed creating database: {err}")
         exit(1)
 
-# Function to initialize the tables
-def initialize_database():
-    connection = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password='password'
-    )
-    cursor = connection.cursor()
-
+def initialize_database(connection, cursor):
+    if connection is None:
+        print("Error: No connection to the database.")
+        exit(1)
     try:
         create_database(cursor)
         cursor.execute(f"USE {DB_NAME}")
@@ -99,46 +91,61 @@ def initialize_database():
         for table_name, table_sql in TABLES.items():
             cursor.execute(table_sql)
             print(f"Created table {table_name}.")
+        
         insert_test_data(cursor)
+
     except Error as err:
         print(f"Error: {err}")
-
     finally:
         connection.commit()
-        cursor.close()
-        connection.close()
 
 def insert_test_data(cursor):
     try:
-        cursor.execute(
-            "INSERT INTO attendees (email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization) "
-            "VALUES ('johndoe@example.com', 'password123', '123 Elm St', 'Doe', 'John', '12345678', 'Student', 'University'),"
-            "       ('janedoe@example.com', 'securepass', '456 Oak St', 'Doe', 'Jane', '87654321', 'Alumni', 'TechCorp'),"
-            "       ('b@gmail.com', 'b123', '789 Maple St', 'Doe', 'Bob', '12348765', 'Staff', 'University')"
-        )
-
-        cursor.execute(
-            "INSERT INTO Administrators (adminEmail, adminName, adminLastName, adminPassword) "
-            "VALUES ('buse@gmail.com' , 'Buse', 'Kaya', 'buse123')"
-        )
+        # Check if test data already exists
+        cursor.execute("SELECT COUNT(*) FROM attendees")
+        attendee_count = cursor.fetchone()[0]
+        if attendee_count == 0:
+            cursor.execute(
+                "INSERT INTO attendees (email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization) "
+                "VALUES ('johndoe@example.com', 'password123', '123 Elm St', 'Doe', 'John', '12345678', 'Student', 'University'),"
+                "       ('janedoe@example.com', 'securepass', '456 Oak St', 'Doe', 'Jane', '87654321', 'Alumni', 'TechCorp'),"
+                "       ('b@gmail.com', 'b123', '789 Maple St', 'Doe', 'Bob', '12348765', 'Staff', 'University')"
+            )
         
-        cursor.execute(
+        cursor.execute("SELECT COUNT(*) FROM Administrators")
+        admin_count = cursor.fetchone()[0]
+        if admin_count == 0:
+            cursor.execute(
+                "INSERT INTO Administrators (adminEmail, adminName, adminLastName, adminPassword) "
+                "VALUES ('buse@gmail.com', 'Buse', 'Kaya', 'buse123')"
+            )
+        
+        cursor.execute("SELECT COUNT(*) FROM Banquet")
+        banquet_count = cursor.fetchone()[0]
+        if banquet_count == 0:
+            cursor.execute(
             "INSERT INTO Banquet (banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats) "
             "VALUES ('Graduation Banquet', '123 Elm St', 'Ballroom', 'buse@gmail.com' , '2022-06-30', '19:00:00', 'Y', 100)"
-        )
-
-        cursor.execute(
-            "INSERT INTO Meal (mealName, special, type) "
-            "VALUES ('Vegan Plate', 'Gluten-Free', 'Main Course'),"
-            "       ('Chicken Dish', 'Spicy', 'Main Course')"
-        )
-
-        cursor.execute(
-            "INSERT INTO Drink (drinkName, isAlcoholic) "
-            "VALUES ('Red Wine', 'Yes'),"
-            "       ('Sparkling Water', 'No')"
-        )
-
+            )
+            
+        cursor.execute("SELECT COUNT(*) FROM Meal")
+        meal_count = cursor.fetchone()[0]
+        if meal_count == 0:
+            cursor.execute(
+                "INSERT INTO Meal (mealName, special, type) "
+                "VALUES ('Vegan Plate', 'Gluten-Free', 'Main Course'),"
+                "       ('Chicken Dish', 'Spicy', 'Main Course')"
+            )
+        
+        cursor.execute("SELECT COUNT(*) FROM Drink")
+        drink_count = cursor.fetchone()[0]
+        if drink_count == 0:
+            cursor.execute(
+                "INSERT INTO Drink (drinkName, isAlcoholic) "
+                "VALUES ('Red Wine', 'Yes'),"
+                "       ('Sparkling Water', 'No')"
+            )
+        
         print("Test data inserted successfully.")
 
     except Error as e:
