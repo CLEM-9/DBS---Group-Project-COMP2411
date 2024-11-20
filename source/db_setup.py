@@ -31,10 +31,10 @@ TABLES = {
         "  banquetName VARCHAR(100) NOT NULL,"
         "  address VARCHAR(100) NOT NULL,"
         "  location VARCHAR(50) NOT NULL,"
-        "  staffEmail VARCHAR(100) NOT NULL UNIQUE,"
+        "  staffEmail VARCHAR(100) NOT NULL,"
         "  banquetDate DATE NOT NULL,"
         "  banquetTime TIME NOT NULL,"
-        "  available CHAR(8) NOT NULL,"
+        "  available ENUM('Yes', 'No'),"
         "  totalSeats INT NOT NULL,"
         "  FOREIGN KEY (staffEmail) REFERENCES Administrators(adminEmail)"
         "    ON UPDATE CASCADE ON DELETE RESTRICT,"
@@ -75,6 +75,7 @@ TABLES = {
         "CREATE TABLE IF NOT EXISTS BanquetMeals ("
         "  BID INT,"
         "  mealName VARCHAR(100),"
+        "  price INT,"
         "  PRIMARY KEY (BID, mealName),"
         "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
         "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE ON DELETE CASCADE"
@@ -84,6 +85,7 @@ TABLES = {
         "CREATE TABLE IF NOT EXISTS BanquetDrinks ("
         "  BID INT,"
         "  drinkName VARCHAR(100),"
+        "  price INT,"
         "  PRIMARY KEY (BID, drinkName),"
         "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
         "  FOREIGN KEY (drinkName) REFERENCES Drink(drinkName) ON UPDATE CASCADE ON DELETE CASCADE"
@@ -142,7 +144,7 @@ def insert_test_data(cursor):
         if banquet_count == 0:
             cursor.execute(
             "INSERT INTO Banquet (banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats) "
-            "VALUES ('Graduation Banquet', '123 Elm St', 'Ballroom', 'buse@gmail.com' , '2022-06-30', '19:00:00', 'Y', 100)"
+            "VALUES ('Graduation Banquet', '123 Elm St', 'Ballroom', 'buse@gmail.com' , '2022-06-30', '19:00:00', 'Yes', 100)"
             )
             
         cursor.execute("SELECT COUNT(*) FROM Meal")
@@ -151,7 +153,11 @@ def insert_test_data(cursor):
             cursor.execute(
                 "INSERT INTO Meal (mealName, special, type) "
                 "VALUES ('Vegan Plate', 'Gluten-Free', 'Main Course'),"
-                "       ('Chicken Dish', 'Spicy', 'Main Course')"
+                "       ('Chicken Dish', 'Spicy', 'Main Course'),"
+                "       ('Cheesecake', 'None', 'Dessert'),"
+                "       ('Fruit Salad', 'Vegan', 'Appetizer'),"
+                "       ('Beef Stew', 'None', 'Main Course')"
+                
             )
         
         cursor.execute("SELECT COUNT(*) FROM Drink")
@@ -175,18 +181,20 @@ def insert_test_data(cursor):
         meal_count = cursor.fetchone()[0]
         if meal_count == 0:
             cursor.execute(
-                "INSERT INTO BanquetMeals (BID, mealName) "
-                "VALUES (1, 'Vegan Plate'),"
-                "       (1, 'Chicken Dish')"
+                "INSERT INTO BanquetMeals (BID, mealName, price) "
+                "VALUES (1, 'Vegan Plate', 10),"
+                "       (1, 'Chicken Dish', 10),"
+                "       (1, 'Cheesecake', 10),"
+                "       (1, 'Fruit Salad', 10)"
             )
         
         cursor.execute("SELECT COUNT(*) FROM BanquetDrinks")
         drink_count = cursor.fetchone()[0]
         if drink_count == 0:
             cursor.execute(
-                "INSERT INTO BanquetDrinks (BID, drinkName) "
-                "VALUES (1, 'Red Wine'),"
-                "       (1, 'Sparkling Water')"
+                "INSERT INTO BanquetDrinks (BID, drinkName, price) "
+                "VALUES (1, 'Red Wine', 10),"
+                "       (1, 'Sparkling Water', 5)"
             )
 
     except Error as e:

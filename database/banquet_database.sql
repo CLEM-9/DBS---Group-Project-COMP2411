@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS Attendees(
     CHECK (email LIKE '%_@_%._%')
 );
 
-CREATE TABLE IF NOT EXISTS Banquet(
+CREATE TABLE IF NOT EXISTS Banquet (
     BID INT AUTO_INCREMENT PRIMARY KEY,
     banquetName VARCHAR(100) NOT NULL,
     address VARCHAR(100) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS Banquet(
     banquetTime TIME NOT NULL,
     available ENUM('Yes', 'No'),
     totalSeats INT NOT NULL,
-    FOREIGN KEY (staffEmail) REFERENCES Attendees(email)
+    FOREIGN KEY (staffEmail) REFERENCES Administrators(adminEmail)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     CONSTRAINT unique_banquet UNIQUE (address, location, banquetDate)
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
         ON DELETE CASCADE,
     FOREIGN KEY (mealName) REFERENCES Meal(mealName)
         ON UPDATE CASCADE,
-    FOREIGN KEY (email) REFERENCES Attendees(email)
+    FOREIGN KEY (email) REFERENCES attendees(email)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );

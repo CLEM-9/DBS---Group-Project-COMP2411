@@ -46,6 +46,47 @@ class Database:
                 return False
         except Error as e:
             print(f"Error code: {e}")
+            
+    def get_attendee_by_email(self, email):
+        """
+        Fetch full information of an attendee based on their email address.
+        """
+        sql = "SELECT * FROM Attendees WHERE email = %s"
+        try:
+            self.cursor.execute(sql, (email,))
+            row = self.cursor.fetchone()
+            if row:
+                return {
+                    'email': row[0],
+                    'password': row[1],
+                    'address': row[2],
+                    'lastName': row[3],
+                    'firstName': row[4],
+                    'phone': row[5],
+                    'attendeeType': row[6],
+                    'affiliateOrganization': row[7],
+                }
+            return None
+        except Error as e:
+            print(f"Error fetching attendee by email: {e}")
+            return None
+        
+    def update_attendee_info(self, email, phone, address, attendee_type, organization):
+        """
+        Update an attendee's registration-related fields.
+        """
+        sql = """
+        UPDATE Attendees
+        SET phone = %s, address = %s, attendeeType = %s, affiliateOrganization = %s
+        WHERE email = %s
+        """
+        values = (phone, address, attendee_type, organization, email)
+        try:
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return f"✅ Attendee '{email}' updated successfully!"
+        except Error as e:
+            return f"❌ Error updating attendee: {e}"
                 
     def drop_database(self):
         try:
@@ -258,9 +299,9 @@ class Banquet(Tables):
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
-            return f"{banquetName} added successfully."
+            return f"\n✅ Banquet '{banquetName}' created successfully! ✅"
         except Error as e:
-            return f"Could not create banquet\nError code: {e}"
+            return f"\nCould not create banquet\nError code: {e}"
 
     # returns an array of arrays containing all information available
     def read(self):
@@ -274,42 +315,61 @@ class Banquet(Tables):
             return f"Could not read banquets\nError code: {e}"
 
     def read_by_filter(self, banquetName, banquetDate, banquetLocation, address):
-        sql = "SELECT * FROM Banquet WHERE "
+        sql = "SELECT * FROM Banquet WHERE 1=1"
         values = []
-        message = "Following fields are filtered:\n"
 
-        banquetName = banquetName.strip() if banquetName else None
-        banquetDate = banquetDate if banquetDate else None
-        banquetLocation = banquetLocation.strip() if banquetLocation else None
-        address = address.strip() if address else None
-        
-        # appends all the information fields that need to be filtered
-        if banquetName is not None:
-            sql = sql + "banquetName = %s, "
-            values.append(banquetName)
-            message += f"banquetName = {banquetName}\n"
-        if banquetDate is not None:
-            sql = sql + "banquetDate = %s, "
+        # Add filters dynamically
+        if banquetName:
+            sql += " AND banquetName LIKE %s"
+            values.append(f"%{banquetName}%") 
+        if banquetDate:
+            sql += " AND banquetDate = %s"
             values.append(banquetDate)
-            message += f"banquetDate = {banquetDate}\n"
-        if banquetLocation is not None:
-            sql = sql + "location = %s, "
+        if banquetLocation:
+            sql += " AND location = %s"
             values.append(banquetLocation)
-            message += f"location = {banquetLocation}\n"
-        if address is not None:
-            sql = sql + "address = %s, "
+        if address:
+            sql += " AND address = %s"
             values.append(address)
-            message += f"adress = {address}\n"
 
-        # removes the last ", "
-        sql = sql[:-2]
         try:
             self.cursor.execute(sql, values)
             result = self.cursor.fetchall()
             return result
         except Error as e:
-            return f"Could not read banquets\nError code: {e}"
+            print(f"Could not read banquets\nError code: {e}")
+            return []
 
+    def read_by_filter_and_staff(self, staffEmail, banquetName, banquetDate, banquetLocation, address):
+        sql = "SELECT * FROM Banquet WHERE staffEmail = %s"
+        values = [staffEmail]
+        message = "Following fields are filtered:\n"
+
+        if banquetName:
+            sql += " AND banquetName LIKE %s"
+            values.append(f"%{banquetName}%") 
+            message += f"banquetName = {banquetName}\n"
+        if banquetDate:
+            sql += " AND banquetDate = %s"
+            values.append(banquetDate)
+            message += f"banquetDate = {banquetDate}\n"
+        if banquetLocation:
+            sql += " AND location = %s"
+            values.append(banquetLocation)
+            message += f"location = {banquetLocation}\n"
+        if address:
+            sql += " AND address = %s"
+            values.append(address)
+            message += f"address = {address}\n"
+
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            return result
+        except Error as e:
+            print(f"Could not read banquets\nError code: {e}")
+            return None
+        
     def read_by_id(self, BID):
         sql = "SELECT * FROM Banquet WHERE BID = %s"
         values = [BID]
@@ -319,10 +379,29 @@ class Banquet(Tables):
             return result
         except Error as e:
             return f"Could not read banquet\nError code: {e}"
-        
-    # if the information is not provided by the user, pass None as argument
+    
+    def get_banquets_by_admin(self, staffEmail):
+        sql = "SELECT * FROM Banquet WHERE staffEmail = %s"
+        values = [staffEmail]
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            return result
+        except Error as e:
+            return f"Could not read banquets\nError code: {e}"
+    
+    def get_id(self, banquet_date, banquet_time, banquet_address):
+        sql = "SELECT BID FROM Banquet WHERE banquetDate = %s AND banquetTime = %s AND address = %s"
+        values = [banquet_date, banquet_time, banquet_address]
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchone()
+            return result[0]
+        except Error as e:
+            return f"Could not read banquet\nError code: {e}"
+         
     def update(self, BID, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats):
-        sql = "UPDATE Banquets SET "
+        sql = "UPDATE Banquet SET "
         values = []
         message = "Following fields are updated:\n"
 
@@ -496,7 +575,7 @@ class BanquetDrinks(Tables):
         self.table_name = "BanquetDrinks"
 
     def create(self, BID, drinkName, price):
-        sql = "INSERT INTO BanquetDrinks(BID, drinkName, price) FROM VALUES (%s, %s, %s)"
+        sql = "INSERT INTO BanquetDrinks(BID, drinkName, price) VALUES (%s, %s, %s)"
         values = (BID, drinkName, price)
         try:
             self.cursor.execute(sql, values)
@@ -516,7 +595,7 @@ class BanquetDrinks(Tables):
             return f"Could not read BanquetDrinks\nError code: {e}"
 
     def show_drinks(self, BID):
-        sql = "SELECT drinkName FROM BanquetDrinks WHERE BID = %s"
+        sql = "SELECT drinkName, price FROM BanquetDrinks WHERE BID = %s"
         values = [BID]
         try:
             self.cursor.execute(sql, values)
@@ -554,12 +633,12 @@ class BanquetMeal(Tables):
         self.table_name = BanquetMeal
 
     def create(self, BID, mealName, price):
-        sql = "INSERT INTO BanquetMeals(BID, mealName, price) FROM VALUES (%s, %s, %s)"
+        sql = "INSERT INTO BanquetMeals(BID, mealName, price) VALUES (%s, %s, %s)"
         values = (BID, mealName, price)
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
-            return f"{BID, mealName} added successfully."
+            return f"Meal '{mealName}' added successfully to Banquet ID {BID}."
         except Error as e:
             return f"Could not create Meal in Banquet\nError code: {e}"
 
@@ -574,15 +653,17 @@ class BanquetMeal(Tables):
             return f"Could not read BanquetMeals\nError code: {e}"
         
     def show_meals(self, BID):
-        sql = "SELECT mealName FROM BanquetMeals WHERE BID = %s"
+        sql = "SELECT mealName, price FROM BanquetMeals WHERE BID = %s"
         values = [BID]
         try:
             self.cursor.execute(sql, values)
             result = self.cursor.fetchall()
-            unpacked_result = Tables.unpack_read_info(result)
-            return unpacked_result
+            if result:
+                formatted_meals = "\n".join([f"{meal[0]} - ${meal[1]:.2f}" for meal in result])
+                return formatted_meals
+            return "❌ No meals found for this banquet."
         except Error as e:
-            return f"Could not read BanquetMeals\nError code"
+            return f"Could not fetch meals for the banquet. Error: {e}"
         
     def update(self, BID, mealName, price):
         sql = "UPDATE BanquetMeals SET price = %s WHERE BID = %s AND mealName = %s"
@@ -668,6 +749,17 @@ class UserBanquetRegistration(Tables):
             return unpacked_result
         except Error as e:
             return f"Could not read UserBanquetRegistration\nError code: {e}" 
+
+    def read_by_user_and_banquet(self, email, BID):
+        sql = "SELECT * FROM UserBanquetRegistration WHERE email = %s AND BID = %s"
+        values = [email, BID]
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchall()
+            unpacked_result = Tables.unpack_read_info(result)
+            return unpacked_result
+        except Error as e:
+            return f"Could not read UserBanquetRegistration\nError code: {e}"
         
     def read(self):
         sql = "SELECT * FROM UserBanquetRegistration"

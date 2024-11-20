@@ -76,19 +76,33 @@ class AttendeePage:
         print("🔍 Search for a Banquet")
         print("=" * 50)
         print("Enter the details to search, or leave fields blank to skip.\n")
-        
-        banquet_name = input("🏷️  Banquet Name: ").strip()
+        #banquet name does not have to be fully written, there will be a search for banquet names that contain the input
+        banquet_name = input("🏷️  Banquet Name (You do not have to provide whole name): ").strip()
         banquet_date = input("📅 Banquet Date (YYYY-MM-DD): ").strip()
         banquet_address = input("🏠 Banquet Address: ").strip()
         banquet_location = input("📍 Banquet Location: ").strip()
 
         print("\nSearching for banquets... 🔄")
         result = self.banquet.read_by_filter(banquet_name, banquet_date, banquet_location, banquet_address)
+
         if result:
-            print("\n✅ Search Results:")
-            print(result)
+            print("\n✅ Search Results:\n")
+            for i, banquet in enumerate(result, start=1):
+                banquet_date_time = f"{banquet[5]} at {banquet[6]}"
+                print(f"""
+    Banquet {i}:
+        🆔 BID: {banquet[0]}
+        🏷️ Name: {banquet[1]}
+        🏠 Address: {banquet[2]}
+        📍 Location: {banquet[3]}
+        📅 Date & Time: {banquet_date_time}
+        🟢 Available: {banquet[7]}
+        🪑 Total Seats: {banquet[8]}
+                """)
         else:
             print("\n❌ No banquets found matching the criteria.")
+
+        # Navigate back to the main menu or display options
         self.display()
 
     def register_for_banquet(self):
@@ -97,12 +111,25 @@ class AttendeePage:
         print("=" * 50)
         banquet_id = input("🆔 Enter Banquet ID: ").strip()
 
+        # Check if user already joined the banquet
+        if self.banquet_registration.read_by_user_and_banquet(self.email, banquet_id):
+            print("❌ You have already registered for this banquet.")
+            self.display()
+            return
+
+        # Check if the banquet ID exists
+        banquet_details = self.banquet.read_by_id(banquet_id)
+        if not banquet_details:
+            print("❌ Banquet ID not found. Please try again.")
+            self.register_for_banquet()
+            return
+
         # Show available meals
         print("\n🍽️ Banquet Meals:")
         banquet_meals = self.meals.show_meals(banquet_id)
         print(banquet_meals)
-        meal_name = input("👉 Enter Meal Name: ").strip()
 
+        meal_name = input("👉 Enter Meal Name: ").strip()
         while banquet_meals.find(meal_name) == -1:
             print("❌ Invalid meal name. Please choose from the list above.")
             meal_name = input("👉 Enter Meal Name: ").strip()
@@ -111,8 +138,8 @@ class AttendeePage:
         print("\n🥂 Banquet Drinks:")
         banquet_drinks = self.drinks.show_drinks(banquet_id)
         print(banquet_drinks)
-        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
 
+        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
         while alcoholic_drink not in ["Yes", "No"]:
             print("❌ Invalid choice. Please enter 'Yes' or 'No'.")
             alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
@@ -126,11 +153,12 @@ class AttendeePage:
         # Validate seating preferences
         if seating_preference1 or seating_preference2:
             while (seating_preference1 and not self.is_valid_email(seating_preference1)) or \
-                  (seating_preference2 and not self.is_valid_email(seating_preference2)):
+                (seating_preference2 and not self.is_valid_email(seating_preference2)):
                 print("❌ Invalid email address. Please try again.")
                 seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
                 seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
 
+        # Register for the banquet
         result = self.banquet_registration.create(
             banquet_id, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1 or None, seating_preference2 or None
         )
