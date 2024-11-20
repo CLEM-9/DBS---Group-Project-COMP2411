@@ -109,7 +109,6 @@ def initialize_database(connection, cursor):
         
         for table_name, table_sql in TABLES.items():
             cursor.execute(table_sql)
-        print("Database initialized successfully.")
         insert_test_data(cursor)
 
     except Error as err:
@@ -189,8 +188,6 @@ def insert_test_data(cursor):
                 "VALUES (1, 'Red Wine'),"
                 "       (1, 'Sparkling Water')"
             )
-        
-        print("Test data inserted successfully.")
 
     except Error as e:
         print(f"Error inserting test data: {e}")
