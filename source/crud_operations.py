@@ -34,18 +34,23 @@ class Database:
 
     def check_email_exists(self, connection, email):
         try:
-            self.cursor.execute(
-                "SELECT * FROM Attendees WHERE email = %s", (email) )
+            # Query attendees
+            self.cursor.execute("SELECT * FROM Attendees WHERE email = %s", (email,))
             if_attendee = self.cursor.fetchone()
-            self.cursor.execute(
-                "SELECT * FROM Administrators WHERE adminEmail = %s", (email) )
+
+            # Query administrators
+            self.cursor.execute("SELECT * FROM Administrators WHERE adminEmail = %s", (email,))
             if_admin = self.cursor.fetchone()
+
+            # Check existence
             if if_attendee or if_admin:
                 return True
             else:
                 return False
+
         except Error as e:
             print(f"Error code: {e}")
+            return False
             
     def get_attendee_by_email(self, email):
         """
@@ -659,11 +664,11 @@ class BanquetMeal(Tables):
             self.cursor.execute(sql, values)
             result = self.cursor.fetchall()
             if result:
-                formatted_meals = "\n".join([f"{meal[0]} - ${meal[1]:.2f}" for meal in result])
-                return formatted_meals
-            return "❌ No meals found for this banquet."
+                return result  # Return a list of tuples (mealName, price)
+            return []  # Return an empty list if no meals are found
         except Error as e:
-            return f"Could not fetch meals for the banquet. Error: {e}"
+            print(f"Could not fetch meals for the banquet. Error: {e}")
+            return []
         
     def update(self, BID, mealName, price):
         sql = "UPDATE BanquetMeals SET price = %s WHERE BID = %s AND mealName = %s"
@@ -776,32 +781,37 @@ class UserBanquetRegistration(Tables):
         values = []
         message = "Following fields are updated:\n"
 
-        # Append fields dynamically if they are not None
-        if mealName:
+        # Dynamically add fields to update
+        if mealName is not None:
             sql += "mealName = %s, "
             values.append(mealName)
             message += f"mealName = {mealName}\n"
-        if alcoholicDrink:
+        if alcoholicDrink is not None:
             sql += "alcoholicDrink = %s, "
             values.append(alcoholicDrink)
             message += f"alcoholicDrink = {alcoholicDrink}\n"
-        if specialNeeds:
+        if specialNeeds is not None:
             sql += "specialNeeds = %s, "
             values.append(specialNeeds)
             message += f"specialNeeds = {specialNeeds}\n"
-        if seatingPref1:
+        if seatingPref1 is not None:
             sql += "seatingPreference1 = %s, "
             values.append(seatingPref1)
             message += f"seatingPreference1 = {seatingPref1}\n"
-        if seatingPref2:
+        if seatingPref2 is not None:
             sql += "seatingPreference2 = %s, "
             values.append(seatingPref2)
             message += f"seatingPreference2 = {seatingPref2}\n"
 
-        # Remove the last comma and space, then add WHERE clause
-        sql = sql.rstrip(", ") + " WHERE BID = %s AND email = %s"
-        values.append(BID)
-        values.append(email)
+        # Remove trailing comma and space
+        sql = sql.rstrip(", ")
+
+        # Add the WHERE clause if there are fields to update
+        if values:
+            sql += " WHERE BID = %s AND email = %s"
+            values.extend([BID, email])
+        else:
+            return "No fields to update. Please provide at least one field to update."
 
         try:
             self.cursor.execute(sql, values)

@@ -2,6 +2,7 @@ from AdminPage import AdminPage
 from AttendeePage import AttendeePage
 from crud_operations import Database
 from crud_operations import Attendees
+from getpass import getpass
 
 class WelcomePage:
     def __init__(self, cursor, connection):
@@ -13,7 +14,7 @@ class WelcomePage:
         print("\n" + "=" * 50)
         print("🚪 Welcome to the Banquet Registration System! 🚪")
         print("=" * 50)
-        print("Please select an option below to proceed:\n")
+        print("Please select an option below to proceed and click enter:\n")
         print("1️⃣  Log in to your account")
         print("2️⃣  Register as a new attendee")
         print("3️⃣  Exit the system\n")
@@ -36,20 +37,20 @@ class WelcomePage:
         print("🔑 Login to Your Account")
         print("=" * 50)
         email = input("📧 Enter Email: ").strip()
-        password = input("🔒 Enter Password: ").strip()
+        password = getpass("🔒 Enter Password (your password is invisible): ").strip()
 
         print("\nAuthenticating your credentials... 🔄")
         user_type = self.database.check_email(self.connection, email, password)
 
         if user_type is None:
-            print("\n❌ Invalid credentials. Please try again. ❌\n")
+            print("\n❌ Invalid email or password. Please check your credentials and try again. ❌\n")
             self.display()
         elif user_type[0] == "Administrator":
-            print("\n✅ Login successful! Welcome, Administrator! ✅\n")
+            print("\n✅ Login successful! Welcome back, Administrator! ✅\n")
             admin_page = AdminPage(self.cursor, self.connection, email)
             admin_page.display()
         elif user_type[0] == "Attendee":
-            print("\n✅ Login successful! Welcome, Attendee! ✅\n")
+            print("\n✅ Login successful! Welcome back, Attendee! ✅\n")
             attendee_page = AttendeePage(self.cursor, self.connection, email)
             attendee_page.display()
 
@@ -59,32 +60,61 @@ class WelcomePage:
         print("=" * 50)
         
         email = input("📧 Enter Email: ").strip()
-        password = input("🔒 Create Password: ").strip()
+        while self.database.check_email_exists(self.connection, email):
+            print("\n❌ This email is already registered. Please log in or use a different email to register. ❌\n")
+            email = input("📧 Enter Email: ").strip()
+        while not email:
+            print("\n❌ Email cannot be empty. Please enter a valid email. ❌\n")
+            email = input("📧 Enter Email: ").strip()
+        while "@" not in email or "." not in email:
+            print("\n❌ Invalid email format. Please enter a valid email. ❌\n")
+            email = input("📧 Enter Email: ").strip()
+            
+        password = getpass("🔒 Create Password (your password will not be showed because of security purposes): ").strip()
+        while not password:
+            print("\n❌ Password is required. Please provide a secure password. ❌\n")
+            password = getpass("🔒 Create Password: ").strip()
+            
         first_name = input("👤 Enter First Name: ").strip()
+        while not first_name or not first_name.isalpha():
+            print("\n❌ First name is required and must only contain letters. Please try again. ❌\n")
+            first_name = input("👤 Enter First Name: ").strip()
+        
         last_name = input("👤 Enter Last Name: ").strip()
+        while not last_name or not last_name.isalpha():
+            print("\n❌ Last name is required and must only contain letters. Please try again. ❌\n")
+            last_name = input("👤 Enter Last Name: ").strip()
+            
         phone = input("📞 Enter Phone Number: ").strip()
+        while phone and (not phone.isdigit() or len(phone) != 8):
+            print("\n❌ Phone number must be 8 digits and numeric. Please enter a valid number. ❌\n")
+            phone = input("📞 Enter Phone Number: ").strip()
+            
         address = input("🏠 Enter Address: ").strip()
+        while not address:
+            print("\n❌ Address cannot be empty. Please enter a valid address. ❌\n")
+            address = input("🏠 Enter Address: ").strip()
+
         attendee_type = input("🎓 Enter Attendee Type (Student, Alumni, Staff, Guest): ").strip()
+        while attendee_type not in ["Student", "Alumni", "Staff", "Guest"]:
+            print("\n❌ Please select a valid attendee type: Student, Alumni, Staff, or Guest. ❌\n")
+            attendee_type = input("🎓 Enter Attendee Type: ").strip
+            
         affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
+        while not affiliate_organization:
+            print("\n❌ Organization name is required. Please provide a valid name. ❌\n")
+            affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
 
         print("\nValidating your information... 🔄")
         
-        # Validate inputs
-        if self.database.check_email_exists(self.connection, email):
-            print("\n❌ Email already exists. Please try logging in or use a different email. ❌\n")
-            self.display()
-        elif attendee_type not in ["Student", "Alumni", "Staff", "Guest"]:
-            print("\n❌ Invalid attendee type. Please enter one of the following: Student, Alumni, Staff, Guest. ❌\n")
-            self.display()
-        else:
-            attendees = Attendees(self.cursor, self.connection)
-            attendees.create(
-                email, password, address, last_name, first_name, phone, attendee_type, affiliate_organization
-            )
-            print(f"\n✅ Registration successful! Welcome, {first_name}! ✅\n")
-            attendee_page = AttendeePage(self.cursor, self.connection, email)
-            attendee_page.display()
-
+        attendees = Attendees(self.cursor, self.connection)
+        attendees.create(
+            email, password, address, last_name, first_name, phone, attendee_type, affiliate_organization
+        )
+        print(f"\n✅ Registration successful! Welcome, {first_name}. You can now explore your dashboard! ✅\n")
+        attendee_page = AttendeePage(self.cursor, self.connection, email)
+        attendee_page.display()
+            
     def exit_program(self):
         print("\n" + "=" * 50)
         print("👋 Thank you for using the Banquet Registration System!")

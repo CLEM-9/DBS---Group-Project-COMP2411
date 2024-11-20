@@ -75,7 +75,8 @@ class AttendeePage:
         print("\n" + "=" * 50)
         print("🔍 Search for a Banquet")
         print("=" * 50)
-        print("Enter the details to search, or leave fields blank to skip.\n")
+        print("Enter the details to filter, or leave fields blank to skip. If you skip all fields, you can see the all the banquets.\n")
+        print("📝 Note down the Banquet ID which you want to register.")
         #banquet name does not have to be fully written, there will be a search for banquet names that contain the input
         banquet_name = input("🏷️  Banquet Name (You do not have to provide whole name): ").strip()
         banquet_date = input("📅 Banquet Date (YYYY-MM-DD): ").strip()
@@ -125,19 +126,28 @@ class AttendeePage:
             return
 
         # Show available meals
-        print("\n🍽️ Banquet Meals:")
+        print("\n🍽️  Banquet Meals:")
         banquet_meals = self.meals.show_meals(banquet_id)
-        print(banquet_meals)
+
+        # Display available meals
+        if banquet_meals:
+            print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in banquet_meals]))
+        else:
+            print("❌ No meals found for this banquet.")
+            return  # Exit the process if no meals are available
 
         meal_name = input("👉 Enter Meal Name: ").strip()
-        while banquet_meals.find(meal_name) == -1:
-            print("❌ Invalid meal name. Please choose from the list above.")
-            meal_name = input("👉 Enter Meal Name: ").strip()
-
-        # Show available drinks
-        print("\n🥂 Banquet Drinks:")
-        banquet_drinks = self.drinks.show_drinks(banquet_id)
-        print(banquet_drinks)
+        if meal_name:
+            # Extract only the meal names for validation
+            available_meals = [meal[0] for meal in banquet_meals]
+            while meal_name not in available_meals:
+                print("❌ Invalid meal name. Please choose from the list below:")
+                print("\n".join(available_meals))  # Display available meal names
+                meal_name = input("👉 Enter Meal Name: ").strip()
+                # Show available drinks
+                print("\n🥂 Banquet Drinks:")
+                banquet_drinks = self.drinks.show_drinks(banquet_id)
+                print(banquet_drinks)
 
         alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
         while alcoholic_drink not in ["Yes", "No"]:
@@ -162,7 +172,7 @@ class AttendeePage:
         result = self.banquet_registration.create(
             banquet_id, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1 or None, seating_preference2 or None
         )
-        print(result)
+        print("\nRegistered successfully!")
         self.display()
 
     def format_datetime(self, date, time):
@@ -197,12 +207,12 @@ class AttendeePage:
                     print(f"""
 Banquet {i}:
     🆔 BID: {BID}
-    🏷️ Name: {banquet_details[0][1]}
+    🏷️  Name: {banquet_details[0][1]}
     🏠 Address: {banquet_details[0][2]}
     📍 Location: {banquet_details[0][3]}
     📅 Date & Time: {banquet_date_time}
     🪑 Seat No: {fields[4]}
-    🍽️ Meal: {fields[2]}
+    🍽️  Meal: {fields[2]}
     🥂 Alcoholic Drink: {fields[3]}
     💬 Special Needs: {fields[5]}
     👥 Seating Preferences: {fields[7]}, {fields[8]}
@@ -237,6 +247,12 @@ Banquet {i}:
             self.display()
         elif choice.lower() == 'yes':
             BID = input("🆔 Enter Banquet ID to delete the registration: ").strip()
+            if not self.banquet_registration.read_by_user_and_banquet(self.email, BID):
+                print("❌ You have not registered for this banquet.")
+                self.display()
+            elif not BID:
+                print("❌ Banquet ID is required to delete registration.")
+                self.delete_registration()
             result = self.banquet_registration.delete(BID, self.email)
             print(result)
             self.display()
@@ -253,26 +269,42 @@ Banquet {i}:
         if not BID:
             print("❌ Banquet ID is required to update registration.")
             self.search_registered_banquets()
-        meals = self.meals.show_meals(BID)
-        print("\n🍽️ Banquet Meals:")
-        print(meals)
-        meal_name = input("🍽️ Enter New Meal Name: ").strip()
+        elif not self.banquet_registration.read_by_user_and_banquet(self.email, BID):
+            print("❌ You have not registered for this banquet or there is no Banquet with this BID.")
+            self.display()
+            
+        meals = self.meals.show_meals(BID)  # Fetch meals for the banquet
+        print("\n🍽️  Banquet Meals:")
+
+        if meals:
+            # Display available meals in a formatted manner
+            print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in meals]))
+        else:
+            print("❌ No meals found for this banquet.")
+            return  # Exit if no meals are available
+
+        meal_name = input("🍽️  Enter New Meal Name: ").strip() or None
         if meal_name:
-            while meals.find(meal_name) == -1:
-                print("❌ Invalid meal name. Please choose from the list above.")
+            # Extract the list of valid meal names for the banquet
+            available_meals = [meal[0] for meal in meals]
+            while meal_name not in available_meals:
+                print("❌ Invalid meal name. Please choose from the list below:")
+                print("\n".join(available_meals))  # Display valid meal names
                 meal_name = input("👉 Enter Meal Name: ").strip()
+                
         drink_options = ["Yes", "No"]
-        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
+        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip() or None
         if alcoholic_drink:
             while alcoholic_drink not in drink_options:
                 print("❌ Invalid choice. Please enter 'Yes' or 'No'.")
                 alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
-        special_needs = input("💬 Special Needs (or press Enter for None): ").strip()
-        seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
-        seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
+                
+        special_needs = input("💬 Special Needs (or press Enter for None): ").strip() or None
+        
+        seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip() or None
+        seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip() or None
         if seating_preference1 or seating_preference2:
-            while (seating_preference1 and not self.is_valid_email(seating_preference1)) or \
-                  (seating_preference2 and not self.is_valid_email(seating_preference2)):
+            while (seating_preference1 and not self.is_valid_email(seating_preference1)) or (seating_preference2 and not self.is_valid_email(seating_preference2)):
                 print("❌ Invalid email address. Please try again.")
                 seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
                 seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
@@ -280,7 +312,6 @@ Banquet {i}:
         result = self.banquet_registration.update(
             BID, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1, seating_preference2
         )
-        print(result)
         self.display()
         
     def logout(self):
