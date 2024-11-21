@@ -684,7 +684,16 @@ class BanquetMeal(Tables):
         except Error as e:
             print(f"Could not fetch meals for the banquet. Error: {e}")
             return []
-        
+    def check_meal_exists(self, BID, mealName):
+        sql = "SELECT * FROM BanquetMeals WHERE BID = %s AND mealName = %s"
+        values = [BID, mealName]
+        try:
+            self.cursor.execute(sql, values)
+            return self.cursor.fetchone() is not None
+        except Error as e:
+            print(f"Could not check if meal exists. Error: {e}")
+            return False
+         
     def update(self, BID, mealName, price):
         sql = "UPDATE BanquetMeals SET price = %s WHERE BID = %s AND mealName = %s"
         values = (price, BID, mealName)
@@ -696,13 +705,13 @@ class BanquetMeal(Tables):
         except Error as e:
             return f"Could not update Meal in Banquet\nError code: {e}"
 
-    def delete(self, BID, mealName):
-        sql = "DELETE FROM BanquetDrinks WHERE BID = %s AND mealName = %s"
-        values = [BID, mealName]
+    def delete(self, BID):
+        sql = "DELETE FROM BanquetDrinks WHERE BID = %s"
+        values = [BID]
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
-            return f"{BID, mealName} deleted successfully."
+            return f"{BID} deleted successfully."
         except Error as e:
             return f"Could not delete Meal from Banquet\nError code: {e}"
 

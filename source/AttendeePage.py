@@ -208,7 +208,7 @@ class AttendeePage:
                 BID = fields[0]
                 banquet_details = self.banquet.read_by_id(BID)
                 if banquet_details:
-                    banquet_date_time = self.format_datetime(banquet_details[5], banquet_details[6])
+                    banquet_date_time = self.format_datetime(banquet_details[7], banquet_details[8])
                     print(f"""
 Banquet {i}:
     🆔 BID: {BID}
