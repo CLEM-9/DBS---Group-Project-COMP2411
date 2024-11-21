@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS Banquet (
     address VARCHAR(100) NOT NULL,
     location VARCHAR(50) NOT NULL,
     staffEmail VARCHAR(100) NOT NULL,
+    staffFirstName VARCHAR(50) NOT NULL,
+    staffLastName VARCHAR(50) NOT NULL,
     banquetDate DATE NOT NULL,
     banquetTime TIME NOT NULL,
     available ENUM('Yes', 'No'),

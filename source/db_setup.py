@@ -32,6 +32,8 @@ TABLES = {
         "  address VARCHAR(100) NOT NULL,"
         "  location VARCHAR(50) NOT NULL,"
         "  staffEmail VARCHAR(100) NOT NULL,"
+        "  staffFirstName VARCHAR(50),"
+        "  staffLastName VARCHAR(50),"
         "  banquetDate DATE NOT NULL,"
         "  banquetTime TIME NOT NULL,"
         "  available ENUM('Yes', 'No'),"
@@ -143,8 +145,8 @@ def insert_test_data(cursor):
         banquet_count = cursor.fetchone()[0]
         if banquet_count == 0:
             cursor.execute(
-            "INSERT INTO Banquet (banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats) "
-            "VALUES ('Graduation Banquet', '123 Elm St', 'Ballroom', 'buse@gmail.com' , '2022-06-30', '19:00:00', 'Yes', 100)"
+            "INSERT INTO Banquet (banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats) "
+            "VALUES ('Graduation Banquet', '123 Elm St', 'Ballroom', 'buse@gmail.com' , 'Buse', 'Kaya', '2022-06-30', '18:00:00', 'Yes', 100)"
             )
             
         cursor.execute("SELECT COUNT(*) FROM Meal")

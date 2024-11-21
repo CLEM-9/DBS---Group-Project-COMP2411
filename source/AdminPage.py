@@ -70,21 +70,21 @@ class AdminPage:
             print("\n❌ Banquet Address cannot be empty.")
             banquet_address = input("🏠 Enter Address: ").strip()
         banquet_seats = self.get_valid_number("💺 Enter Total Seats: ")
+        
+        staff_info = self.administrators.get_staff_info(self.email)
+        if not staff_info:
+            print("❌ Could not fetch staff information.")
+            return
 
+        staff_first_name = staff_info['staffFirstName']
+        staff_last_name = staff_info['staffLastName']
+            
         print("\nCreating banquet... 🔄")
-        result = self.banquet.create(
-            banquet_name,
-            banquet_address,
-            banquet_location,
-            self.email,
-            banquet_date,
-            banquet_time,
-            "Yes",
-            banquet_seats
-        )
+        result = self.banquet.create(banquet_name, banquet_address, banquet_location, self.email, staff_first_name, staff_last_name, banquet_date, banquet_time, "Yes", banquet_seats)
+        print(result)
+        
         if "created successfully" in result:
             banquet_id = self.banquet.get_id(banquet_date, banquet_time, banquet_address)
-            print(banquet_id) #test
             print(result)
             self.add_meals_to_banquet(banquet_id)
             self.add_drinks_to_banquet(banquet_id)
@@ -157,14 +157,15 @@ class AdminPage:
         for i, banquet in enumerate(your_banquets, start=1):
             banquet_date_time = f"{banquet[5]} at {banquet[6]}"
             print(f"""
-    Banquet {i}:
-        🆔 BID: {banquet[0]}
-        🏷️ Name: {banquet[1]}
-        🏠 Address: {banquet[2]}
-        📍 Location: {banquet[3]}
-        📅 Date & Time: {banquet_date_time}
-        🪑 Total Seats: {banquet[8]}
-        🟢 Available: {banquet[7]}
+Banquet {i}:
+    🆔 BID: {banquet[0]}
+    🏷️ Name: {banquet[1]}
+    🏠 Address: {banquet[2]}
+    📍 Location: {banquet[3]}
+    📅 Date & Time: {banquet_date_time}
+    🟢 Available: {banquet[8]}
+    🪑 Total Seats: {banquet[9]}
+    📞 Contact: {banquet[4]} {banquet[5]}
             """)
         print("=" * 50)
         # Ask if the user wants to edit or go back
@@ -200,15 +201,16 @@ class AdminPage:
             for i, banquet in enumerate(result, start=1):
                 banquet_date_time = f"{banquet[5]} at {banquet[6]}"
                 print(f"""
-    Banquet {i}:
-        🆔 BID: {banquet[0]}
-        🏷️ Name: {banquet[1]}
-        🏠 Address: {banquet[2]}
-        📍 Location: {banquet[3]}
-        📅 Date & Time: {banquet_date_time}
-        🪑 Total Seats: {banquet[8]}
-        🟢 Available: {banquet[7]}
-                """)
+Banquet {i}:
+    🆔 BID: {banquet[0]}
+    🏷️ Name: {banquet[1]}
+    🏠 Address: {banquet[2]}
+    📍 Location: {banquet[3]}
+    📅 Date & Time: {banquet_date_time}
+    🟢 Available: {banquet[8]}
+    🪑 Total Seats: {banquet[9]}
+    📞 Contact: {banquet[4]} {banquet[5]}
+            """)
         else:
             print("\n❌ No banquets found matching the criteria.")
 

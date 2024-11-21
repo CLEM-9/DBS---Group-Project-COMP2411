@@ -298,9 +298,12 @@ class Banquet(Tables):
         self.table_name = "Banquet"
 
     # creates new banquet entry, banquetID is handled automatically by the database
-    def create(self, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats):
-        sql = "INSERT INTO Banquet(banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        values = (banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats)
+    def create(self, banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats):
+        sql = """
+        INSERT INTO Banquet(banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        values = (banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats)
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -314,19 +317,21 @@ class Banquet(Tables):
         try:
             self.cursor.execute(sql)
             result = self.cursor.fetchall()
-            unpacked_result = Tables.unpack_read_info(result)
-            return unpacked_result
+            return result  # Return all banquet details including new staff info
         except Error as e:
             return f"Could not read banquets\nError code: {e}"
 
     def read_by_filter(self, banquetName, banquetDate, banquetLocation, address):
-        sql = "SELECT * FROM Banquet WHERE 1=1"
+        sql = """
+        SELECT BID, banquetName, address, location, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats
+        FROM Banquet
+        WHERE 1=1
+        """
         values = []
 
-        # Add filters dynamically
         if banquetName:
             sql += " AND banquetName LIKE %s"
-            values.append(f"%{banquetName}%") 
+            values.append(f"%{banquetName}%")
         if banquetDate:
             sql += " AND banquetDate = %s"
             values.append(banquetDate)
@@ -339,8 +344,7 @@ class Banquet(Tables):
 
         try:
             self.cursor.execute(sql, values)
-            result = self.cursor.fetchall()
-            return result
+            return self.cursor.fetchall()
         except Error as e:
             print(f"Could not read banquets\nError code: {e}")
             return []
@@ -376,14 +380,18 @@ class Banquet(Tables):
             return None
         
     def read_by_id(self, BID):
-        sql = "SELECT * FROM Banquet WHERE BID = %s"
+        sql = """
+        SELECT BID, banquetName, address, location, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats
+        FROM Banquet
+        WHERE BID = %s
+        """
         values = [BID]
         try:
             self.cursor.execute(sql, values)
-            result = self.cursor.fetchall()
-            return result
+            return self.cursor.fetchone()
         except Error as e:
-            return f"Could not read banquet\nError code: {e}"
+            print(f"Could not read banquet\nError code: {e}")
+            return None
     
     def get_banquets_by_admin(self, staffEmail):
         sql = "SELECT * FROM Banquet WHERE staffEmail = %s"
@@ -405,49 +413,56 @@ class Banquet(Tables):
         except Error as e:
             return f"Could not read banquet\nError code: {e}"
          
-    def update(self, BID, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats):
+    def update(self, BID, banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats):
         sql = "UPDATE Banquet SET "
         values = []
         message = "Following fields are updated:\n"
 
-        # appends all the information fields that need to be updated
-        if banquetName is not None:
-            sql = sql + "banquetName = %s, "
+        if banquetName:
+            sql += "banquetName = %s, "
             values.append(banquetName)
             message += f"banquetName = {banquetName}\n"
-        if address is not None:
-            sql = sql + "address = %s, "
+        if address:
+            sql += "address = %s, "
             values.append(address)
             message += f"address = {address}\n"
-        if location is not None:
-            sql = sql + "location = %s, "
+        if location:
+            sql += "location = %s, "
             values.append(location)
             message += f"location = {location}\n"
-        if staffEmail is not None:
-            sql = sql + "staffEmail = %s, "
+        if staffEmail:
+            sql += "staffEmail = %s, "
             values.append(staffEmail)
             message += f"staffEmail = {staffEmail}\n"
-        if banquetDate is not None:
-            sql = sql + "banquetDate = %s, "
+        if staffFirstName:
+            sql += "staffFirstName = %s, "
+            values.append(staffFirstName)
+            message += f"staffFirstName = {staffFirstName}\n"
+        if staffLastName:
+            sql += "staffLastName = %s, "
+            values.append(staffLastName)
+            message += f"staffLastName = {staffLastName}\n"
+        if banquetDate:
+            sql += "banquetDate = %s, "
             values.append(banquetDate)
             message += f"banquetDate = {banquetDate}\n"
-        if banquetTime is not None:
-            sql = sql + "banquetTime = %s, "
+        if banquetTime:
+            sql += "banquetTime = %s, "
             values.append(banquetTime)
             message += f"banquetTime = {banquetTime}\n"
-        if available is not None:
-            sql = sql + "available = %s, "
+        if available:
+            sql += "available = %s, "
             values.append(available)
             message += f"available = {available}\n"
-        if totalSeats is not None:
-            sql = sql + "totalSeats = %s, "
+        if totalSeats:
+            sql += "totalSeats = %s, "
             values.append(totalSeats)
             message += f"totalSeats = {totalSeats}\n"
 
-        # removes the last ", "
-        sql = sql[:-2]
-        sql = sql + " WHERE BID = %s"
+        sql = sql.rstrip(", ")  # Remove the trailing comma
+        sql += " WHERE BID = %s"
         values.append(BID)
+
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -844,7 +859,20 @@ class Administrators(Tables):
             return f"{adminName} {adminLastName} added successfully to Admins."
         except Error as e:
             return f"Could not create Administrator\nError code: {e}"
-
+        
+    def get_staff_info(self, staffEmail):
+        sql = "SELECT adminName, adminLastName FROM Administrators WHERE adminEmail = %s"
+        values = [staffEmail]
+        try:
+            self.cursor.execute(sql, values)
+            result = self.cursor.fetchone()
+            if result:
+                return {"staffFirstName": result[0], "staffLastName": result[1]}
+            return None
+        except Error as e:
+            print(f"Error fetching staff info: {e}")
+            return None
+        
     def read(self):
         sql = "SELECT * FROM Administrators"
         try:

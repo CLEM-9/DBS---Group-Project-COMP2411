@@ -75,10 +75,10 @@ class AttendeePage:
         print("\n" + "=" * 50)
         print("🔍 Search for a Banquet")
         print("=" * 50)
-        print("Enter the details to filter, or leave fields blank to skip. If you skip all fields, you can see the all the banquets.\n")
+        print("Enter the details to filter, or leave fields blank to skip.\n")
         print("📝 Note down the Banquet ID which you want to register.")
-        #banquet name does not have to be fully written, there will be a search for banquet names that contain the input
-        banquet_name = input("🏷️  Banquet Name (You do not have to provide whole name): ").strip()
+        
+        banquet_name = input("🏷️  Banquet Name: ").strip()
         banquet_date = input("📅 Banquet Date (YYYY-MM-DD): ").strip()
         banquet_address = input("🏠 Banquet Address: ").strip()
         banquet_location = input("📍 Banquet Location: ").strip()
@@ -89,21 +89,21 @@ class AttendeePage:
         if result:
             print("\n✅ Search Results:\n")
             for i, banquet in enumerate(result, start=1):
-                banquet_date_time = f"{banquet[5]} at {banquet[6]}"
+                banquet_date_time = f"{banquet[6]} at {banquet[7]}"
                 print(f"""
-    Banquet {i}:
-        🆔 BID: {banquet[0]}
-        🏷️ Name: {banquet[1]}
-        🏠 Address: {banquet[2]}
-        📍 Location: {banquet[3]}
-        📅 Date & Time: {banquet_date_time}
-        🟢 Available: {banquet[7]}
-        🪑 Total Seats: {banquet[8]}
+        Banquet {i}:
+            🆔 BID: {banquet[0]}
+            🏷️ Name: {banquet[1]}
+            🏠 Address: {banquet[2]}
+            📍 Location: {banquet[3]}
+            📅 Date & Time: {banquet_date_time}
+            🟢 Available: {banquet[8]}
+            🪑 Total Seats: {banquet[9]}
+            📞 Contact: {banquet[4]} {banquet[5]}
                 """)
         else:
             print("\n❌ No banquets found matching the criteria.")
 
-        # Navigate back to the main menu or display options
         self.display()
 
     def register_for_banquet(self):
@@ -203,19 +203,20 @@ class AttendeePage:
                 BID = fields[0]
                 banquet_details = self.banquet.read_by_id(BID)
                 if banquet_details:
-                    banquet_date_time = self.format_datetime(banquet_details[0][5], banquet_details[0][6])
+                    banquet_date_time = self.format_datetime(banquet_details[5], banquet_details[6])
                     print(f"""
 Banquet {i}:
     🆔 BID: {BID}
-    🏷️  Name: {banquet_details[0][1]}
-    🏠 Address: {banquet_details[0][2]}
-    📍 Location: {banquet_details[0][3]}
+    🏷️  Name: {banquet_details[1]}
+    🏠 Address: {banquet_details[2]}
+    📍 Location: {banquet_details[3]}
     📅 Date & Time: {banquet_date_time}
     🪑 Seat No: {fields[4]}
     🍽️  Meal: {fields[2]}
     🥂 Alcoholic Drink: {fields[3]}
     💬 Special Needs: {fields[5]}
     👥 Seating Preferences: {fields[7]}, {fields[8]}
+    📞 Contact: {banquet_details[4]} {banquet_details[5]}
 """)
                 else:
                     print(f"❌ Banquet {i}: Could not fetch details for BID {BID}")
