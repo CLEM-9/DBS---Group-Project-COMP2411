@@ -105,7 +105,7 @@ class AttendeePage:
             print("\n❌ No banquets found matching the criteria.")
 
         self.display()
-
+        
     def register_for_banquet(self):
         print("\n" + "=" * 50)
         print("📝 Register for a Banquet")
@@ -159,8 +159,13 @@ class AttendeePage:
         print("👥 Seating Preferences:")
         seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
         seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
-
         # Validate seating preferences
+        while (seating_preference1 and self.database.check_email_exists(self.connection, seating_preference1)):
+            print("❌ Email address already registered. Please try again.")
+            seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
+        while (seating_preference2 and self.database.check_email_exists(self.connection, seating_preference2)):
+            print("❌ Email address already registered. Please try again.")
+            seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         if seating_preference1 or seating_preference2:
             while (seating_preference1 and not self.is_valid_email(seating_preference1)) or \
                 (seating_preference2 and not self.is_valid_email(seating_preference2)):
