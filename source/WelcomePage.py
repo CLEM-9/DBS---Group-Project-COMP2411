@@ -37,7 +37,10 @@ class WelcomePage:
         print("🔑 Login to Your Account")
         print("=" * 50)
         email = input("📧 Enter Email: ").strip()
-        password = getpass("🔒 Enter Password (your password is invisible): ").strip()
+
+        #TODO switch to getpass on delivery
+        #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
+        password = input("🔒 Enter Password (your password is invisible): ").strip()
 
         print("\nAuthenticating your credentials... 🔄")
         user_type = self.database.check_email(email, password)
@@ -69,11 +72,15 @@ class WelcomePage:
         while "@" not in email or "." not in email:
             print("\n❌ Invalid email format. Please enter a valid email. ❌\n")
             email = input("📧 Enter Email: ").strip()
-            
-        password = getpass("🔒 Create Password (your password will not be showed because of security purposes): ").strip()
+
+        #TODO switch to getpass on delivery
+        #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
+        password = input("🔒 Enter Password (your password is invisible): ").strip()
         while not password:
             print("\n❌ Password is required. Please provide a secure password. ❌\n")
-            password = getpass("🔒 Create Password: ").strip()
+            #TODO switch to getpass on delivery
+            #password = getpass("🔒 Create Password: ").strip()
+            password = input("🔒 Create Password: ").strip()
             
         first_name = input("👤 Enter First Name: ").strip()
         while not first_name or not first_name.isalpha():

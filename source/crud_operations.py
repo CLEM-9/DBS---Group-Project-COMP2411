@@ -667,6 +667,7 @@ class UserBanquetRegistration(Tables):
         super().__init__(cursor, connection)
         self.table_name = "UserBanquetRegistration"
 
+    #TODO yes no to BIT
     def create(self, BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2):
         # Default values for optional fields
         specialNeeds = specialNeeds or "None"
@@ -807,7 +808,7 @@ class Administrators(Tables):
         self.table_name = "Administrators"
 
     def create(self, adminEmail, adminName, adminLastName, adminPassword):
-        sql = "INSERT INTO Administrators(adminEmail, adminName, adminLastName, adminPassword) FROM VALUES (%s, %s, %s, %s)"
+        sql = "INSERT INTO Administrators(adminEmail, adminName, adminLastName, adminPassword) VALUES (%s, %s, %s, %s)"
         values = (adminEmail, adminName, adminLastName, adminPassword)
         try:
             self.cursor.execute(sql, values)

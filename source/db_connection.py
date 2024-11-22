@@ -33,6 +33,7 @@ def get_db_connection():
         cursor = connection.cursor()
 
         # Initialize the database and tables
+        print("\nPlease wait, initializing database...")
         initialize_database(connection, cursor)
 
         if connection.is_connected():

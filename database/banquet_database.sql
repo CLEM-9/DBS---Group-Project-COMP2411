@@ -19,13 +19,11 @@ CREATE TABLE IF NOT EXISTS Banquet (
     address VARCHAR(100) NOT NULL,
     location VARCHAR(50) NOT NULL,
     staffEmail VARCHAR(100) NOT NULL,
-    staffFirstName VARCHAR(50) NOT NULL,
-    staffLastName VARCHAR(50) NOT NULL,
     banquetDate DATE NOT NULL,
     banquetTime TIME NOT NULL,
     available ENUM('Yes', 'No'),
     totalSeats INT NOT NULL,
-    FOREIGN KEY (staffEmail) REFERENCES Administrators(adminEmail)
+    FOREIGN KEY (staffEmail) REFERENCES Attendees(email)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     CONSTRAINT unique_banquet UNIQUE (address, location, banquetDate)
@@ -39,7 +37,7 @@ CREATE TABLE IF NOT EXISTS Meal(
 
 CREATE TABLE IF NOT EXISTS Drink(
     drinkName VARCHAR(100) PRIMARY KEY,
-    isAlcoholic ENUM('Yes', 'No')
+    isAlcoholic BIT
 );
 
 CREATE TABLE IF NOT EXISTS BanquetDrinks(
@@ -72,7 +70,7 @@ CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
     BID INT,
     email VARCHAR(100),
     mealName VARCHAR(100) NOT NULL,
-    alcoholicDrink ENUM('Yes', 'No') NOT NULL,
+    alcoholicDrink BIT NOT NULL,
     seatAssignment INT,
     specialNeeds VARCHAR(128),
     regDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -85,7 +83,7 @@ CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
         ON DELETE CASCADE,
     FOREIGN KEY (mealName) REFERENCES Meal(mealName)
         ON UPDATE CASCADE,
-    FOREIGN KEY (email) REFERENCES attendees(email)
+    FOREIGN KEY (email) REFERENCES Attendees(email)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );

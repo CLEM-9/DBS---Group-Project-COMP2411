@@ -6,7 +6,7 @@ DB_NAME = 'banquet_database'
 
 TABLES = {
     'attendees': (
-        "CREATE TABLE IF NOT EXISTS attendees ("
+        "CREATE TABLE IF NOT EXISTS Attendees("
         "  email VARCHAR(100) PRIMARY KEY,"
         "  password VARCHAR(50) NOT NULL,"
         "  address VARCHAR(100) NOT NULL,"
@@ -33,13 +33,11 @@ TABLES = {
         "  address VARCHAR(100) NOT NULL,"
         "  location VARCHAR(50) NOT NULL,"
         "  staffEmail VARCHAR(100) NOT NULL,"
-        "  staffFirstName VARCHAR(50),"
-        "  staffLastName VARCHAR(50),"
         "  banquetDate DATE NOT NULL,"
         "  banquetTime TIME NOT NULL,"
         "  available ENUM('Yes', 'No'),"
         "  totalSeats INT NOT NULL,"
-        "  FOREIGN KEY (staffEmail) REFERENCES Administrators(adminEmail)"
+        "  FOREIGN KEY (staffEmail) REFERENCES Attendees(email)"
         "    ON UPDATE CASCADE ON DELETE RESTRICT,"
         "  CONSTRAINT unique_banquet UNIQUE (address, location, banquetDate)"
         ")"
@@ -54,7 +52,7 @@ TABLES = {
     'Drink': (
         "CREATE TABLE IF NOT EXISTS Drink ("
         "  drinkName VARCHAR(100) PRIMARY KEY,"
-        "  isAlcoholic ENUM('Yes', 'No')"
+        "  isAlcoholic BIT"
         ")"
     ),
     'UserBanquetRegistration': (
@@ -62,16 +60,18 @@ TABLES = {
         "  BID INT,"
         "  email VARCHAR(100),"
         "  mealName VARCHAR(100) NOT NULL,"
-        "  alcoholicDrink ENUM('Yes', 'No') NOT NULL,"
+        "  alcoholicDrink BIT NOT NULL,"
         "  seatAssignment INT,"
         "  specialNeeds VARCHAR(128),"
         "  regDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
         "  seatingPreference1 VARCHAR(100),"
         "  seatingPreference2 VARCHAR(100),"
         "  PRIMARY KEY (BID, email),"
+        "  CHECK (seatingPreference1 LIKE '%_@_%._%'),"
+        "  CHECK (seatingPreference2 LIKE '%_@_%._%'),"
         "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE,"
         "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE,"
-        "  FOREIGN KEY (email) REFERENCES attendees(email) ON UPDATE CASCADE ON DELETE CASCADE"
+        "  FOREIGN KEY (email) REFERENCES Attendees(email) ON UPDATE CASCADE ON DELETE CASCADE"
         ")"
     ),
     'BanquetMeals': (
@@ -131,13 +131,13 @@ def initialize_database(connection, cursor):
 def insert_test_data(cursor):
     try:
         # Check if test data already exists
-        cursor.execute("SELECT COUNT(*) FROM attendees")
+        cursor.execute("SELECT COUNT(*) FROM Attendees")
         attendee_count = cursor.fetchone()[0]
         if attendee_count == 0:
             cursor.execute(
-                "INSERT INTO attendees (email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization) "
+                "INSERT INTO Attendees (email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization) "
                 "VALUES ('johndoe@example.com', 'password123', '123 Elm St', 'Doe', 'John', '12345678', 'Student', 'University'),"
-                "       ('janedoe@example.com', 'securepass', '456 Oak St', 'Doe', 'Jane', '87654321', 'Alumni', 'TechCorp'),"
+                "       ('janedoe@example.hk', 'securepass', '456 Oak St', 'Doe', 'Jane', '87654321', 'Alumni', 'TechCorp'),"
                 "       ('b@gmail.com', 'b123', '789 Maple St', 'Doe', 'Bob', '12348765', 'Staff', 'University')"
             )
         
@@ -153,7 +153,7 @@ def insert_test_data(cursor):
         banquet_count = cursor.fetchone()[0]
         if banquet_count == 0:
             cursor.execute(
-            "INSERT INTO Banquet (banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats) "
+            "INSERT INTO Banquet (banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats) "
             "VALUES ('Graduation Banquet', '123 Elm St', 'Ballroom', 'buse@gmail.com' , 'Buse', 'Kaya', '2022-06-30', '18:00:00', 'Yes', 100)"
             )
             
