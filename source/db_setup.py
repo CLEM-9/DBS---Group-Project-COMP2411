@@ -1,6 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
 import pandas as pd
+import os
 
 DB_NAME = 'banquet_database'
 
@@ -114,15 +115,15 @@ def initialize_database(connection, cursor):
         
         for table_name, table_sql in TABLES.items():
             cursor.execute(table_sql)
-        #insert_data_from_excel(cursor, connection, 'database/Attendees.xlsx', 'attendees')
-        #insert_data_from_excel(cursor, connection, 'database/Administrators.xlsx', 'Administrators')
-        #insert_data_from_excel(cursor, connection, 'database/Banquet.xlsx', 'Banquet')
-        #insert_data_from_excel(cursor, connection, 'database/Meal.xlsx', 'Meal')
-        #insert_data_from_excel(cursor, connection, 'database/Drink.xlsx', 'Drink')
-        #insert_data_from_excel(cursor, connection, 'database/BanquetMeals.xlsx', 'BanquetMeals')
-        #insert_data_from_excel(cursor, connection, 'database/BanquetDrinks.xlsx', 'BanquetDrinks')
-        #insert_data_from_excel(cursor, connection, 'database/UserBanquetRegistration.xlsx', 'UserBanquetRegistration')
-        insert_test_data(cursor)
+        insert_data_from_excel(cursor, connection, 'Attendees')
+        insert_data_from_excel(cursor, connection, 'Administrators')
+        insert_data_from_excel(cursor, connection, 'Banquet')
+        insert_data_from_excel(cursor, connection, 'Meal')
+        insert_data_from_excel(cursor, connection, 'Drink')
+        #insert_data_from_excel(cursor, connection, 'BanquetMeals')
+        #insert_data_from_excel(cursor, connection, 'BanquetDrinks')
+        #insert_data_from_excel(cursor, connection, 'UserBanquetRegistration')
+        #insert_test_data(cursor)
     except Error as err:
         print(f"Error: {err}")
     finally:
@@ -210,18 +211,19 @@ def insert_test_data(cursor):
     except Error as e:
         print(f"Error inserting test data: {e}")
 
-def insert_data_from_excel(cursor, connection, file_path, table_name):
+def insert_data_from_excel(cursor, connection, table_name):
+    file_path = os.path.join(os.path.dirname(__file__), f"../database/test_data_tables/{table_name}.xlsx")
     try:
         data = pd.read_excel(file_path)
         columns = data.columns.tolist()
         columns_placeholder = ", ".join(columns)
         placeholders = ", ".join(["%s"] * len(columns))
-        insert_query = f"INSERT INTO {table_name} ({columns_placeholder}) VALUES ({placeholders})"
+        insert_query = f"INSERT IGNORE INTO {table_name}({columns_placeholder}) VALUES ({placeholders})"
         for _, row in data.iterrows():
-            values = tuple(row)
+            values = list(row)
             cursor.execute(insert_query, values)
         connection.commit()
-        print(f"✅ Data from '{file_path}' inserted successfully into '{table_name}'.")
+        print(f"✅ Data from '{table_name}.xlsx' inserted successfully into '{table_name}'.")
 
     except Error as e:
         print(f"❌ Error inserting data into {table_name}: {e}")
