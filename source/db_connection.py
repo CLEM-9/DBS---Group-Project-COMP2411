@@ -18,13 +18,15 @@ def get_db_connection():
         print("🔒 Your password will not be displayed on the screen for security purposes.")
         print("💡 If you need to change the MySQL username or host, edit 'db_connection.py'.")
         print("=" * 50)
-        
-        password = getpass("👉 Enter your MySQL password: ")
+
+        #TODO switch to getpass for final version, getpass doesn't work on PYCHARM IDE
+        #password = getpass("👉 Enter your MySQL password: ")
+        password = input("👉 Enter your MySQL password: ")
 
         # Attempt to establish a connection
         connection = mysql.connector.connect(
             host='localhost',
-            user='root',
+            user='test_user',
             password=password
         )
         cursor = connection.cursor()
