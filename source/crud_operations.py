@@ -928,7 +928,53 @@ class Administrators(Tables):
         except Error as e:
             return f"Could not delete Administrator\nError code: {e}"
 
+class ReportGeneration(Tables):
+    def __init__(self, cursor, connection):
+        super().__init__(cursor, connection)
+        self.table_name = "UserBanquetRegistration"
+        
+    def get_registration_status(self):
+        sql = """
+        SELECT b.banquetName, b.totalSeats, COUNT(r.email) AS registered, 
+               (b.totalSeats - COUNT(r.email)) AS available
+        FROM Banquet b
+        LEFT JOIN UserBanquetRegistration r ON b.BID = r.BID
+        GROUP BY b.BID
+        """
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
 
+    def get_popular_meals(self):
+        sql = """
+        SELECT bm.mealName, COUNT(ubr.mealName) AS popularity
+        FROM BanquetMeals bm
+        LEFT JOIN UserBanquetRegistration ubr ON bm.mealName = ubr.mealName
+        GROUP BY bm.mealName
+        ORDER BY popularity DESC;
+        """
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
 
+    def get_attendance_behavior(self):
+        sql = """
+        SELECT b.banquetDate, COUNT(r.email) AS attendance
+        FROM Banquet b
+        LEFT JOIN UserBanquetRegistration r ON b.BID = r.BID
+        GROUP BY b.banquetDate
+        ORDER BY b.banquetDate
+        """
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
+    def get_attendee_type_summary(self):
+        sql = """
+        SELECT a.attendeeType, COUNT(r.email) AS registrations
+        FROM Attendees a
+        JOIN UserBanquetRegistration r ON a.email = r.email
+        GROUP BY a.attendeeType
+        """
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+    
 
 

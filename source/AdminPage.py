@@ -1,13 +1,9 @@
-from crud_operations import Database
-from crud_operations import Banquet
-from crud_operations import Meal
-from crud_operations import BanquetMeal
-from crud_operations import Drink
-from crud_operations import BanquetDrinks
-from crud_operations import Administrators
+from crud_operations import Database, Banquet, Meal, BanquetMeal, Drink, BanquetDrinks, Administrators, ReportGeneration
 from datetime import datetime
 import random
-
+import pandas as pd
+import matplotlib.pyplot as plt
+from tabulate import tabulate
 
 class AdminPage:
     def __init__(self, cursor, connection, email):
@@ -21,6 +17,7 @@ class AdminPage:
         self.drink = Drink(cursor, connection)
         self.banquet_drinks = BanquetDrinks(cursor, connection)
         self.administrators= Administrators(cursor, connection)
+        self.reportgeneration = ReportGeneration(cursor, connection)
 
     # This method is called when the admin logs in, and it displays the admin dashboard
     def display(self):
@@ -426,7 +423,96 @@ Banquet {i}:
         else:
             print("\n❌ Invalid choice. Returning to dashboard.")
         self.display()
+    
+    def generate_registration_status_report(self):
+        data = pd.DataFrame(
+            self.reportgeneration.get_registration_status(),
+            columns=["Banquet Name", "Total Seats", "Registered", "Available"]
+        )
+        print("\n🔍 Registration Status Report:")
+        print(tabulate(data, headers="keys", tablefmt="pretty", showindex=False))
+
+        # Visualization: Bar chart of registration status
+        data.plot(kind='bar', x="Banquet Name", stacked=True, figsize=(10, 6),
+                  title="Registration Status per Banquet")
+        plt.ylabel("Seats")
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
+        plt.show()
+
+    def generate_popular_meals_report(self):
+        # Fetch data from the database
+        meal_data = self.reportgeneration.get_popular_meals()  # Ensure this returns a list of tuples like [(mealName, popularity)]
         
+        if not meal_data:
+            print("\n❌ No data available for popular meals.")
+            return
+
+        # Create a DataFrame for better processing and visualization
+        data = pd.DataFrame(meal_data, columns=["Meal Name", "Popularity"])
+        print("\n🔍 Popular Meals Report:")
+        print(tabulate(data, headers="keys", tablefmt="pretty", showindex=False))
+
+        # Check if data contains at least one non-zero popularity
+        if data["Popularity"].sum() == 0:
+            print("\n⚠️ All meals have zero popularity.")
+            return
+
+        # Visualization: Bar chart of meal popularity
+        data.sort_values("Popularity", ascending=False, inplace=True)  # Sort by popularity
+        plt.figure(figsize=(10, 6))
+        plt.bar(data["Meal Name"], data["Popularity"], color="skyblue")
+        plt.xlabel("Meal Name")
+        plt.ylabel("Popularity")
+        plt.title("Meal Popularity Distribution")
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
+        plt.show()
+
+        # Visualization: Pie chart of meal popularity
+        plt.figure(figsize=(8, 8))
+        data.set_index("Meal Name").plot(
+            kind="pie", 
+            y="Popularity", 
+            autopct='%1.1f%%', 
+            figsize=(8, 8),
+            title="Popular Meals Distribution",
+            legend=False
+        )
+        plt.ylabel("")
+        plt.show()
+
+    def generate_attendance_behavior_report(self):
+        data = pd.DataFrame(
+            self.reportgeneration.get_attendance_behavior(),
+            columns=["Banquet Date", "Attendance"]
+        )
+        print("\n🔍 Attendance Behavior Report:")
+        print(tabulate(data, headers="keys", tablefmt="pretty", showindex=False))
+
+        # Visualization: Line chart of attendance over time
+        data.plot(kind="line", x="Banquet Date", y="Attendance", marker='o', figsize=(10, 6),
+                  title="Attendance Behavior Over Time")
+        plt.ylabel("Number of Attendees")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+    def generate_attendee_type_summary(self):
+        data = pd.DataFrame(
+            self.reportgeneration.get_attendee_type_summary(),
+            columns=["Attendee Type", "Registrations"]
+        )
+        print("\n🔍 Summary by Attendee Type:")
+        print(tabulate(data, headers="keys", tablefmt="pretty", showindex=False))
+
+        # Visualization: Horizontal bar chart of attendee type summary
+        data.plot(kind="barh", x="Attendee Type", y="Registrations", figsize=(8, 6),
+                  title="Registrations by Attendee Type")
+        plt.xlabel("Registrations")
+        plt.tight_layout()
+        plt.show()
+           
     def get_valid_date(self, prompt, allow_empty=False):
         while True:
             date_input = input(prompt).strip()
