@@ -65,9 +65,8 @@ class AttendeePage:
         attendee_type = input("🎓 New Attendee Type (Student, Alumni, Staff, Guest): ").strip()
         affiliate_organization = input("🏢 New Affiliate Organization: ").strip()
         
-        result = self.attendees.update_everything(
-            email, password, phone, first_name, last_name, address, attendee_type, affiliate_organization, self.email
-        )
+        result = self.attendees.update(self.email, email, password, phone, first_name, last_name, address,
+                                       attendee_type, affiliate_organization)
         print(result)
         self.display()
 
@@ -160,10 +159,10 @@ class AttendeePage:
         seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
         seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         # Validate seating preferences
-        while (seating_preference1 and self.database.check_email_exists(self.connection, seating_preference1)):
+        while seating_preference1 and self.database.check_email_exists(self.connection, seating_preference1):
             print("❌ Email address already registered. Please try again.")
             seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
-        while (seating_preference2 and self.database.check_email_exists(self.connection, seating_preference2)):
+        while seating_preference2 and self.database.check_email_exists(self.connection, seating_preference2):
             print("❌ Email address already registered. Please try again.")
             seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         if seating_preference1 or seating_preference2:

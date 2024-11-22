@@ -1,4 +1,5 @@
-from crud_operations import Database, Banquet, Meal, BanquetMeal, Drink, BanquetDrinks, Administrators, ReportGeneration
+from crud_operations import Database, Banquet, Meal, BanquetMeal, Drink, BanquetDrinks, Administrators, \
+    ReportGeneration, Attendees
 from datetime import datetime
 import random
 import pandas as pd
@@ -17,6 +18,7 @@ class AdminPage:
         self.drink = Drink(cursor, connection)
         self.banquet_drinks = BanquetDrinks(cursor, connection)
         self.administrators= Administrators(cursor, connection)
+        self.attendees = Attendees(cursor, connection)
         self.reportgeneration = ReportGeneration(cursor, connection)
 
     # This method is called when the admin logs in, and it displays the admin dashboard
@@ -337,7 +339,7 @@ Banquet {i}:
         print("\nSearching attendees... 🔄")
         
         # Fetch attendee information
-        result = self.database.get_attendee_by_email(search_query)  # Assuming a function to get attendee info
+        result = self.attendees.get(search_query)  # Assuming a function to get attendee info
         if result:
             print("\n✅ Search completed! Attendee Information:\n")
             print(f"""
@@ -367,7 +369,7 @@ Banquet {i}:
             attendee_email = input("📧 Enter Attendee Email: ").strip()
         
         # Fetch current information for reference
-        current_info = self.database.get_attendee_by_email(attendee_email)  # Assuming a function to get attendee info
+        current_info = self.attendees.get(attendee_email)  # Assuming a function to get attendee info
         if not current_info:
             print("\n❌ Attendee not found. Returning to dashboard.")
             self.display()
@@ -392,9 +394,8 @@ Banquet {i}:
 
         # Update attendee information
         print("\nUpdating attendee information... 🔄")
-        update_result = self.database.update_attendee_info(
-            attendee_email, new_phone, new_address, new_type, new_org
-        )
+        update_result = self.attendees.admin_update_attendee_info(attendee_email, new_phone, new_address, new_type,
+                                                                  new_org)
         if "successfully" in update_result:
             print(f"\n✅ Attendee '{attendee_email}' updated successfully! ✅")
         else:

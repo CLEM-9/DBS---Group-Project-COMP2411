@@ -27,11 +27,11 @@ class TestAttendees(TestCase):
     def test_update(self):
         user.delete_all_entries()
         user.create(email, password, address, lastName, firstName, phone, attendeeType, affiliation)
-        print(user.update(email, "TEST@TEST.TEST", None, None, None, None, None))
+        print(user.user_update_own_info(email, "TEST@TEST.TEST", None, None, None, None, None))
         message = user.read()
         print(message)
         self.assertEqual(message, "TEST@TEST.TEST, <PASSWORD>, <ADDRESS>, <LASTNAME>, <FIRSTNAME>, <PHONE>, Staff, <AFFILIATION>, \n")
-        print(user.update("TEST@TEST.TEST", None, None, None, "33333333", None, None))
+        print(user.user_update_own_info("TEST@TEST.TEST", None, None, None, "33333333", None, None))
         message = user.read()
         print(message)
         self.assertEqual(message, "TEST@TEST.TEST, <PASSWORD>, <ADDRESS>, <LASTNAME>, <FIRSTNAME>, 33333333, Staff, <AFFILIATION>, \n")

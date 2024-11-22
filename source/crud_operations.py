@@ -7,8 +7,8 @@ class Database:
         self.cursor = cursor
         self.connection = connection
 
+    def check_email(self, email, password):
     # checks if logging_in user is attendee or administrator
-    def check_email(self, connection, email, password):
         try:
             self.cursor.execute(
                 "SELECT * FROM Attendees WHERE email = %s AND password = %s",
@@ -51,53 +51,6 @@ class Database:
         except Error as e:
             print(f"Error code: {e}")
             return False
-            
-    def get_attendee_by_email(self, email):
-        """
-        Fetch full information of an attendee based on their email address.
-        """
-        sql = "SELECT * FROM Attendees WHERE email = %s"
-        try:
-            self.cursor.execute(sql, (email,))
-            row = self.cursor.fetchone()
-            if row:
-                return {
-                    'email': row[0],
-                    'password': row[1],
-                    'address': row[2],
-                    'lastName': row[3],
-                    'firstName': row[4],
-                    'phone': row[5],
-                    'attendeeType': row[6],
-                    'affiliateOrganization': row[7],
-                }
-            return None
-        except Error as e:
-            print(f"Error fetching attendee by email: {e}")
-            return None
-        
-    def update_attendee_info(self, email, phone, address, attendee_type, organization):
-        """
-        Update an attendee's registration-related fields.
-        """
-        sql = """
-        UPDATE Attendees
-        SET phone = %s, address = %s, attendeeType = %s, affiliateOrganization = %s
-        WHERE email = %s
-        """
-        values = (phone, address, attendee_type, organization, email)
-        try:
-            self.cursor.execute(sql, values)
-            self.connection.commit()
-            return f"✅ Attendee '{email}' updated successfully!"
-        except Error as e:
-            return f"❌ Error updating attendee: {e}"
-                
-    def drop_database(self):
-        try:
-            self.cursor.execute("DROP DATABASE IF EXISTS banquet_database")
-        except Error as e:
-            print(f"Error code: {e}")
 
 
 class Tables:
@@ -167,51 +120,7 @@ class Attendees(Tables):
         except Error as e:
             return f"Could not read attendee\nError code: {e}"
 
-    # if the information is not provided by the user, pass None as argument
-    def update(self, emailID, email, password, address, phone, attendeeType, affiliateOrganization):
-    
-        sql = "UPDATE Attendees SET "
-        values = []
-        message = "Following fields are updated:\n"
-
-        # updates all fields that are not None
-        if email is not None:
-            sql = sql + "email = %s, "
-            values.append(email)
-            message += f"email = {email}\n"
-        if password is not None:
-            sql = sql + "password = %s, "
-            message += f"password = {password}\n"
-            values.append(password)
-        if address is not None:
-            sql = sql + "address = %s, "
-            values.append(address)
-            message += f"address = {address}\n"
-        if phone is not None:
-            sql = sql + "phone = %s, "
-            values.append(phone)
-            message += f"phone = {phone}\n"
-        if attendeeType is not None:
-            sql = sql + "attendeeType = %s, "
-            values.append(attendeeType)
-            message += f"attendeeType = {attendeeType}\n"
-        if affiliateOrganization is not None:
-            sql = sql + "affiliateOrganization = %s, "
-            values.append(affiliateOrganization)
-            message += f"affiliateOrganization = {affiliateOrganization}\n"
-
-        # removes the last ", "
-        sql = sql[:-2]
-        sql = sql + " WHERE email = %s"
-        values.append(emailID)
-        try:
-            self.cursor.execute(sql, values)
-            self.connection.commit()
-            return message
-        except Error as e:
-            return f"Could not update attendee\nError code: {e}"
-
-    def update_everything(self, email, password, phone, firstName, lastName, address, attendeeType, affiliateOrganization, emailID):    
+    def update(self, emailID, email= None, password= None, phone= None, firstName= None, lastName= None, address= None, attendeeType= None, affiliateOrganization= None):
         sql = "UPDATE Attendees SET "
         values = []
         message = "Following fields are updated:\n"
@@ -279,7 +188,21 @@ class Attendees(Tables):
             return message
         except Error as e:
             return f"Could not update attendee\nError code: {e}"
-        
+
+    def user_update_own_info(self, emailID, email= None, password= None, address= None, phone= None, attendeeType= None, affiliateOrganization= None):
+        self.update(emailID, email=email, password=password, phone=phone, address=address, attendeeType=attendeeType,
+                    affiliateOrganization=affiliateOrganization)
+
+    def admin_update_attendee_info(self, emailID, phone= None, address= None, attendee_type= None, organization= None):
+        self.update(emailID, phone=phone, address=address, attendeeType=attendee_type,
+                    affiliateOrganization=organization)
+
+    def drop_database(self):
+        try:
+            self.cursor.execute("DROP DATABASE IF EXISTS banquet_database")
+        except Error as e:
+            print(f"Error code: {e}")
+
     # deletes user with the primary key "email"
     def delete(self, email):
         sql = "DELETE FROM Attendees WHERE email = %s"
@@ -290,6 +213,30 @@ class Attendees(Tables):
             return "User deleted successfully."
         except Error as e:
             return f"Could not delete attendee\nError code: {e}"
+
+    def get(self, email):
+        """
+        Fetch full information of an attendee based on their email address.
+        """
+        sql = "SELECT * FROM Attendees WHERE email = %s"
+        try:
+            self.cursor.execute(sql, (email,))
+            row = self.cursor.fetchone()
+            if row:
+                return {
+                    'email': row[0],
+                    'password': row[1],
+                    'address': row[2],
+                    'lastName': row[3],
+                    'firstName': row[4],
+                    'phone': row[5],
+                    'attendeeType': row[6],
+                    'affiliateOrganization': row[7],
+                }
+            return None
+        except Error as e:
+            print(f"Error fetching attendee by email: {e}")
+            return None
 
 
 class Banquet(Tables):

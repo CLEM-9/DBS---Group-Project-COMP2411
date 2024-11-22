@@ -40,7 +40,7 @@ class WelcomePage:
         password = getpass("🔒 Enter Password (your password is invisible): ").strip()
 
         print("\nAuthenticating your credentials... 🔄")
-        user_type = self.database.check_email(self.connection, email, password)
+        user_type = self.database.check_email(email, password)
 
         if user_type is None:
             print("\n❌ Invalid email or password. Please check your credentials and try again. ❌\n")
