@@ -1,15 +1,18 @@
 import datetime
 import re
 
+from matplotlib.style.core import available
+
+
 class AttendeePage:
     def __init__(self, cursor, connection, email, database):
         self.cursor = cursor
         self.connection = connection
         self.email = email
-        self.database = database
+        self.db = database
 
     @staticmethod
-    def is_valid_email(self, email):
+    def is_valid_email(email):
         pattern = r'^[^@]+@[^@]+\.[^@]+$'
         return re.match(pattern, email) is not None
 
@@ -55,7 +58,7 @@ class AttendeePage:
         attendee_type = input("🎓 New Attendee Type (Student, Alumni, Staff, Guest): ").strip()
         affiliate_organization = input("🏢 New Affiliate Organization: ").strip()
         
-        result = self.attendees.update(self.email, email, password, phone, first_name, last_name, address,
+        result = self.db.attendees.update(self.email, email, password, phone, first_name, last_name, address,
                                        attendee_type, affiliate_organization)
         print(result)
         self.display()
@@ -73,28 +76,29 @@ class AttendeePage:
         banquet_location = input("📍 Banquet Location: ").strip()
 
         print("\nSearching for banquets... 🔄")
-        result = self.banquet.read_by_filter(banquet_name, banquet_date, banquet_location, banquet_address)
+        result = self.db.banquet.read_by_filter(banquet_name, banquet_date, banquet_location, banquet_address)
 
         if result:
             print("\n✅ Search Results:\n")
             for i, banquet in enumerate(result, start=1):
-                banquet_date_time = f"{banquet[6]} at {banquet[7]}"
+                banquet_date_time = f"{banquet[4]} at {banquet[5]}"
+                available = "Yes" if banquet[6] else "No"
                 print(f"""
-        Banquet {i}:
-            🆔 BID: {banquet[0]}
-            🏷️ Name: {banquet[1]}
-            🏠 Address: {banquet[2]}
-            📍 Location: {banquet[3]}
-            📅 Date & Time: {banquet_date_time}
-            🟢 Available: {banquet[8]}
-            🪑 Total Seats: {banquet[9]}
-            📞 Contact: {banquet[4]} {banquet[5]}
-                """)
+                        Banquet {i}:
+                            🆔 BID: {banquet[0]}
+                            🏷️ Name: {banquet[1]}
+                            🏠 Address: {banquet[2]}
+                            📍 Location: {banquet[3]}
+                            📅 Date & Time: {banquet_date_time}
+                            🟢 Available: {available}
+                            🪑 Total Seats: {banquet[7]}
+                            """)
         else:
             print("\n❌ No banquets found matching the criteria.")
 
         self.display()
-        
+
+    # TODO not working
     def register_for_banquet(self):
         print("\n" + "=" * 50)
         print("📝 Register for a Banquet")
@@ -102,13 +106,13 @@ class AttendeePage:
         banquet_id = input("🆔 Enter Banquet ID: ").strip()
 
         # Check if user already joined the banquet
-        if self.banquet_registration.read_by_user_and_banquet(self.email, banquet_id):
+        if self.db.user_banquet_registration.read_by_user_and_banquet(self.email, banquet_id):
             print("❌ You have already registered for this banquet.")
             self.display()
             return
 
         # Check if the banquet ID exists
-        banquet_details = self.banquet.read_by_id(banquet_id)
+        banquet_details = self.db.banquet.read_by_id(banquet_id)
         if not banquet_details:
             print("❌ Banquet ID not found. Please try again.")
             self.register_for_banquet()
@@ -116,7 +120,7 @@ class AttendeePage:
 
         # Show available meals
         print("\n🍽️  Banquet Meals:")
-        banquet_meals = self.meals.show_meals(banquet_id)
+        banquet_meals = self.db.banquet_meal.show_meals(banquet_id)
 
         # Display available meals
         if banquet_meals:
@@ -135,7 +139,7 @@ class AttendeePage:
                 meal_name = input("👉 Enter Meal Name: ").strip()
                 # Show available drinks
                 print("\n🥂 Banquet Drinks:")
-                banquet_drinks = self.drinks.show_drinks(banquet_id)
+                banquet_drinks = self.db.drinks.show_drinks(banquet_id)
                 print(banquet_drinks)
 
         alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
@@ -149,10 +153,10 @@ class AttendeePage:
         seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
         seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         # Validate seating preferences
-        while seating_preference1 and self.database.check_email_exists(seating_preference1):
+        while seating_preference1 and self.db.check_email_exists(seating_preference1):
             print("❌ Email address already registered. Please try again.")
             seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
-        while seating_preference2 and self.database.check_email_exists(seating_preference2):
+        while seating_preference2 and self.db.check_email_exists(seating_preference2):
             print("❌ Email address already registered. Please try again.")
             seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         if seating_preference1 or seating_preference2:
@@ -163,13 +167,14 @@ class AttendeePage:
                 seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
 
         # Register for the banquet
-        result = self.banquet_registration.create(
+        result = self.db.user_banquet_registration.create(
             banquet_id, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1 or None, seating_preference2 or None
         )
         print("\nRegistered successfully!")
         self.display()
 
-    def format_datetime(self, date, time):
+    @staticmethod
+    def format_datetime(date, time):
         try:
             date_obj = datetime.datetime.strptime(str(date), "%Y-%m-%d")
             time_obj = datetime.datetime.strptime(str(time), "%H:%M:%S")
@@ -184,7 +189,7 @@ class AttendeePage:
         print("📋 Registered Banquets")
         print("=" * 50)
         
-        registered_banquets = self.banquet_registration.read_by_user(self.email)
+        registered_banquets = self.db.user_banquet_registration.read_by_user(self.email)
         if not registered_banquets.strip():
             print("❌ No registered banquets.")
             self.display()
@@ -195,7 +200,7 @@ class AttendeePage:
             try:
                 fields = entry.split(", ")
                 BID = fields[0]
-                banquet_details = self.banquet.read_by_id(BID)
+                banquet_details = self.db.banquet.read_by_id(BID)
                 if banquet_details:
                     banquet_date_time = self.format_datetime(banquet_details[7], banquet_details[8])
                     print(f"""
@@ -242,13 +247,13 @@ Banquet {i}:
             self.display()
         elif choice.lower() == 'yes':
             BID = input("🆔 Enter Banquet ID to delete the registration: ").strip()
-            if not self.banquet_registration.read_by_user_and_banquet(self.email, BID):
+            if not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
                 print("❌ You have not registered for this banquet.")
                 self.display()
             elif not BID:
                 print("❌ Banquet ID is required to delete registration.")
                 self.delete_registration()
-            result = self.banquet_registration.delete(BID, self.email)
+            result = self.db.user_banquet_registration.delete(BID, self.email)
             print(result)
             self.display()
         else:
@@ -264,11 +269,11 @@ Banquet {i}:
         if not BID:
             print("❌ Banquet ID is required to update registration.")
             self.search_registered_banquets()
-        elif not self.banquet_registration.read_by_user_and_banquet(self.email, BID):
+        elif not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
             print("❌ You have not registered for this banquet or there is no Banquet with this BID.")
             self.display()
             
-        meals = self.meals.show_meals(BID)  # Fetch meals for the banquet
+        meals = self.db.meal.show_meals(BID)  # Fetch meals for the banquet
         print("\n🍽️  Banquet Meals:")
 
         if meals:
@@ -304,12 +309,12 @@ Banquet {i}:
                 seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
                 seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         print("\nUpdating registration... 🔄")
-        result = self.banquet_registration.update(
-            BID, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1, seating_preference2
-        )
+        result = self.db.user_banquet_registration.update(
+            BID, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1, seating_preference2)
         self.display()
-        
-    def logout(self):
+
+    @staticmethod
+    def logout():
         print("\n" + "=" * 50)
         print("👋 Logging out... Goodbye!")
         print("=" * 50)

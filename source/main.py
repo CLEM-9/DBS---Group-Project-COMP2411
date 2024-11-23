@@ -7,8 +7,9 @@ DB_NAME = "banquet_database"
 if __name__ == "__main__":
     connection, cursor = get_db_connection(DB_NAME)
     BMS_database = BanquetDatabase(cursor, connection, DB_NAME)
+
     # TODO drop database, delete before submitting
-    BMS_database.drop_database()
+    #BMS_database.drop_database()
 
     # sets up the database and tables
     BMS_database.setup_database_and_tables()

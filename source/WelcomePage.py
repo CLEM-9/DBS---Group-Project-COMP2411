@@ -104,7 +104,7 @@ class WelcomePage:
         attendee_type = input("🎓 Enter Attendee Type (Student, Alumni, Staff, Guest): ").strip()
         while attendee_type not in ["Student", "Alumni", "Staff", "Guest"]:
             print("\n❌ Please select a valid attendee type: Student, Alumni, Staff, or Guest. ❌\n")
-            attendee_type = input("🎓 Enter Attendee Type: ").strip
+            attendee_type = input("🎓 Enter Attendee Type: ").strip()
             
         affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
         while not affiliate_organization:
@@ -112,16 +112,16 @@ class WelcomePage:
             affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
 
         print("\nValidating your information... 🔄")
-        
-        attendees = Attendees(self.cursor, self.connection)
-        attendees.create(
+
+        self.database.attendees.create(
             email, password, address, last_name, first_name, phone, attendee_type, affiliate_organization
         )
         print(f"\n✅ Registration successful! Welcome, {first_name}. You can now explore your dashboard! ✅\n")
-        attendee_page = AttendeePage(self.cursor, self.connection, email)
+        attendee_page = AttendeePage(self.cursor, self.connection, email, self.database)
         attendee_page.display()
-            
-    def exit_program(self):
+
+    @staticmethod
+    def exit_program():
         print("\n" + "=" * 50)
         print("👋 Thank you for using the Banquet Registration System!")
         print("Goodbye! Have a great day! 🌟")

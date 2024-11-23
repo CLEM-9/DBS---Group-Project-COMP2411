@@ -157,7 +157,8 @@ class AdminPage:
         # Print the banquets in a formatted way
         print("\n📋 Your Banquets:\n")
         for i, banquet in enumerate(your_banquets, start=1):
-            banquet_date_time = f"{banquet[6]} at {banquet[7]}"
+            banquet_date_time = f"{banquet[4]} at {banquet[5]}"
+            available = "Yes" if banquet[6] else "No"
             print(f"""
                     Banquet {i}:
                         🆔 BID: {banquet[0]}
@@ -165,9 +166,8 @@ class AdminPage:
                         🏠 Address: {banquet[2]}
                         📍 Location: {banquet[3]}
                         📅 Date & Time: {banquet_date_time}
-                        🟢 Available: {banquet[8]}
-                        🪑 Total Seats: {banquet[9]}
-                        📞 Contact: {banquet[4]} {banquet[5]}
+                        🟢 Available: {available}
+                        🪑 Total Seats: {banquet[7]}
                                 """)
         print("=" * 50)
         self.display()
@@ -207,7 +207,7 @@ class AdminPage:
         if result:
             print("\n✅ Search Results:\n")
             for i, banquet in enumerate(result, start=1):
-                banquet_date_time = f"{banquet[6]} at {banquet[7]}"
+                banquet_date_time = f"{banquet[5]} at {banquet[6]}"
                 print(f"""
                         Banquet {i}:
                             🆔 BID: {banquet[0]}
@@ -215,9 +215,8 @@ class AdminPage:
                             🏠 Address: {banquet[2]}
                             📍 Location: {banquet[3]}
                             📅 Date & Time: {banquet_date_time}
-                            🟢 Available: {banquet[8]}
-                            🪑 Total Seats: {banquet[9]}
-                            📞 Contact: {banquet[4]} {banquet[5]}
+                            🟢 Available: {banquet[7]}
+                            🪑 Total Seats: {banquet[8]}
                                     """)
         else:
             print("\n❌ No banquets found matching the criteria.")

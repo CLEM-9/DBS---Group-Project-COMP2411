@@ -189,7 +189,7 @@ class Banquet(Tables):
     # creates new banquet entry, banquetID is handled automatically by the database
     def create(self, banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats):
         sql = """
-        INSERT INTO Banquet(banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats)
+        INSERT INTO Banquet(banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         values = (banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats)
@@ -212,9 +212,9 @@ class Banquet(Tables):
 
     def read_by_filter(self, banquetName, banquetDate, banquetLocation, address):
         sql = """
-        SELECT BID, banquetName, address, location, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats
+        SELECT BID, banquetName, address, location, banquetDate, banquetTime, available, totalSeats
         FROM Banquet
-        WHERE 1=1
+        WHERE TRUE
         """
         values = []
 
@@ -270,7 +270,7 @@ class Banquet(Tables):
         
     def read_by_id(self, BID):
         sql = """
-        SELECT BID, banquetName, address, location, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats
+        SELECT BID, banquetName, address, location, banquetDate, banquetTime, available, totalSeats
         FROM Banquet
         WHERE BID = %s
         """
@@ -619,12 +619,12 @@ class UserBanquetRegistration(Tables):
         seatingPref2 = seatingPref2 or "None"
 
         # SQL query to fetch the next seat assignment
-        seat_no_query = "SELECT COALESCE(MAX(seatAssignment), 0) + 1 AS nextSeat FROM UserBanquetRegistration"
+        seat_no_query = "SELECT COALESCE(MAX(seatAssigned), 0) + 1 AS nextSeat FROM UserBanquetRegistration"
 
         # SQL query to insert a new registration
         sql_insert = """
         INSERT INTO UserBanquetRegistration
-        (BID, email, mealName, alcoholicDrink, seatAssignment, specialNeeds, seatingPreference1, seatingPreference2)
+        (BID, email, mealName, alcoholicDrink, seatAssigned, specialNeeds, seatingPreference1, seatingPreference2)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
 

@@ -104,14 +104,14 @@ class BanquetDatabase:
 
         # creates the objects to work with the tables
         # NOTE: it does NOT create the table
-        self.attendees = Attendees(self.cursor, self.connection),
-        self.administrators = Administrators(self.cursor, self.connection),
-        self.banquet = Banquet(self.cursor, self.connection),
-        self.meal = Meal(self.cursor, self.connection),
-        self.drink = Drink(self.cursor, self.connection),
-        self.banquet_drink = BanquetDrink(self.cursor, self.connection),
-        self.banquet_meal = BanquetMeal(self.cursor, self.connection),
-        self.user_banquet_registration = UserBanquetRegistration(self.cursor, self.connection),
+        self.attendees = Attendees(self.cursor, self.connection)
+        self.administrators = Administrators(self.cursor, self.connection)
+        self.banquet = Banquet(self.cursor, self.connection)
+        self.meal = Meal(self.cursor, self.connection)
+        self.drink = Drink(self.cursor, self.connection)
+        self.banquet_drink = BanquetDrink(self.cursor, self.connection)
+        self.banquet_meal = BanquetMeal(self.cursor, self.connection)
+        self.user_banquet_registration = UserBanquetRegistration(self.cursor, self.connection)
 
     def check_connection(self):
         if self.connection is None:
