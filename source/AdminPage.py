@@ -207,7 +207,8 @@ class AdminPage:
         if result:
             print("\n✅ Search Results:\n")
             for i, banquet in enumerate(result, start=1):
-                banquet_date_time = f"{banquet[5]} at {banquet[6]}"
+                banquet_date_time = f"{banquet[4]} at {banquet[5]}"
+                available = "Yes" if banquet[6] else "No"
                 print(f"""
                         Banquet {i}:
                             🆔 BID: {banquet[0]}
@@ -215,8 +216,8 @@ class AdminPage:
                             🏠 Address: {banquet[2]}
                             📍 Location: {banquet[3]}
                             📅 Date & Time: {banquet_date_time}
-                            🟢 Available: {banquet[7]}
-                            🪑 Total Seats: {banquet[8]}
+                            🟢 Available: {available}
+                            🪑 Total Seats: {banquet[7]}
                                     """)
         else:
             print("\n❌ No banquets found matching the criteria.")
