@@ -1,5 +1,4 @@
-from crud_operations import Database, Banquet, Meal, BanquetMeal, Drink, BanquetDrinks, Administrators, \
-    ReportGeneration, Attendees
+from crud_operations import ReportGeneration
 from datetime import datetime
 import random
 import pandas as pd
@@ -7,19 +6,12 @@ import matplotlib.pyplot as plt
 from tabulate import tabulate
 
 class AdminPage:
-    def __init__(self, cursor, connection, email):
+    def __init__(self, cursor, connection, email, database):
         self.cursor = cursor
         self.connection = connection
         self.email = email
-        self.database = Database(cursor, connection)
-        self.banquet = Banquet(cursor, connection)
-        self.meal = Meal(cursor, connection)
-        self.banquet_meal = BanquetMeal(cursor, connection)
-        self.drink = Drink(cursor, connection)
-        self.banquet_drinks = BanquetDrinks(cursor, connection)
-        self.administrators= Administrators(cursor, connection)
-        self.attendees = Attendees(cursor, connection)
-        self.reportgeneration = ReportGeneration(cursor, connection)
+        self.db = database
+        self.report_generation = ReportGeneration(self.cursor, self.connection)
 
     # This method is called when the admin logs in, and it displays the admin dashboard
     def display(self):
@@ -74,7 +66,7 @@ class AdminPage:
             banquet_address = input("🏠 Enter Address: ").strip()
         banquet_seats = self.get_valid_number("💺 Enter Total Seats: ")
         
-        staff_info = self.administrators.get_staff_info(self.email)
+        staff_info = self.db.administrators.get_staff_info(self.email)
         if not staff_info:
             print("❌ Could not fetch staff information.")
             return
@@ -83,10 +75,10 @@ class AdminPage:
         staff_last_name = staff_info['staffLastName']
             
         print("\nCreating banquet... 🔄")
-        result = self.banquet.create(banquet_name, banquet_address, banquet_location, self.email, staff_first_name, staff_last_name, banquet_date, banquet_time, "Yes", banquet_seats)
+        result = self.db.banquet.create(banquet_name, banquet_address, banquet_location, self.email, staff_first_name, staff_last_name, banquet_date, banquet_time, "Yes", banquet_seats)
         
         if "created successfully" in result:
-            banquet_id = self.banquet.get_id(banquet_date, banquet_time, banquet_address)
+            banquet_id = self.db.banquet.get_id(banquet_date, banquet_time, banquet_address)
             print(result)
             self.add_meals_to_banquet(banquet_id)
             self.add_drinks_to_banquet(banquet_id)
@@ -100,7 +92,7 @@ class AdminPage:
         print("🍽️ Add Meals to Banquet")
         print("=" * 50)
 
-        available_meals = self.meal.read()
+        available_meals = self.db.meal.read()
         print("\nAvailable Meals:\n")
         print(available_meals)
 
@@ -108,11 +100,11 @@ class AdminPage:
         for i in range(1, 5):
             while True:
                 meal_name = input(f"👉 Enter Meal {i} Name: ").strip()
-                if self.banquet_meal.check_meal_exists(banquet_id, meal_name):
+                if self.db.banquet_meal.check_meal_exists(banquet_id, meal_name):
                     print("\n❌ Meal already exists in the banquet. Please select a different meal.")
                 elif self.validate_meal_name(meal_name):
                     meal_price = self.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
-                    print(self.banquet_meal.create(banquet_id, meal_name, meal_price))
+                    print(self.db.banquet_meal.create(banquet_id, meal_name, meal_price))
                     print(f"✅ Meal '{meal_name}' added successfully.")
                     break
                 elif not meal_name:
@@ -123,7 +115,7 @@ class AdminPage:
     # This method is called when the admin wants to add drinks to a banquet
     def add_drinks_to_banquet(self, banquet_id):
         print("\nAdding drinks to the banquet... 🔄")
-        available_drinks = self.drink.read()
+        available_drinks = self.db.drink.read()
 
         alcoholic_drinks = [drink for drink in available_drinks.split("\n") if "Yes" in drink]
         non_alcoholic_drinks = [drink for drink in available_drinks.split("\n") if "No" in drink]
@@ -138,12 +130,12 @@ class AdminPage:
         for drink in [selected_alcoholic, selected_non_alcoholic]:
             drink_name = drink.split(", ")[0]
             drink_price = random.randint(5, 20)  # Generate a random price
-            self.banquet_drinks.create(banquet_id, drink_name, drink_price)
+            self.db.banquet_drinks.create(banquet_id, drink_name, drink_price)
             print(f"✅ Drink '{drink_name}' added with price {drink_price}.")
 
     # This method is called to validate the meal name entered by the admin
     def validate_meal_name(self, meal_name):
-        available_meals = self.meal.read()
+        available_meals = self.db.meal.read()
         available_meal_names = [meal.split(", ")[0] for meal in available_meals.split("\n") if meal]
         return meal_name in available_meal_names
 
@@ -152,9 +144,9 @@ class AdminPage:
         print("\n" + "=" * 50)
         print("✏️ Update Your Banquets")
         print("=" * 50)
-        
+
         # Fetch all the banquets created by this admin
-        your_banquets = self.banquet.get_banquets_by_admin(self.email)
+        your_banquets = self.db.banquet.get_banquets_by_admin(self.email)
 
         # Check if there are any banquets
         if not your_banquets:
@@ -167,16 +159,16 @@ class AdminPage:
         for i, banquet in enumerate(your_banquets, start=1):
             banquet_date_time = f"{banquet[6]} at {banquet[7]}"
             print(f"""
-Banquet {i}:
-    🆔 BID: {banquet[0]}
-    🏷️  Name: {banquet[1]}
-    🏠 Address: {banquet[2]}
-    📍 Location: {banquet[3]}
-    📅 Date & Time: {banquet_date_time}
-    🟢 Available: {banquet[8]}
-    🪑 Total Seats: {banquet[9]}
-    📞 Contact: {banquet[4]} {banquet[5]}
-            """)
+                    Banquet {i}:
+                        🆔 BID: {banquet[0]}
+                        🏷️  Name: {banquet[1]}
+                        🏠 Address: {banquet[2]}
+                        📍 Location: {banquet[3]}
+                        📅 Date & Time: {banquet_date_time}
+                        🟢 Available: {banquet[8]}
+                        🪑 Total Seats: {banquet[9]}
+                        📞 Contact: {banquet[4]} {banquet[5]}
+                                """)
         print("=" * 50)
         self.display()
     
@@ -188,13 +180,13 @@ Banquet {i}:
         banquet_id = input("🆔 Enter the Banquet ID you want to delete: ").strip()
         
         # Check if the banquet ID is valid
-        banquet_ids = [str(banquet[0]) for banquet in self.banquet.read()]   
+        banquet_ids = [str(banquet[0]) for banquet in self.db.banquet.read()]
         if not banquet_id.isdigit() or banquet_id not in banquet_ids:
             print("\n❌ Invalid Banquet ID. Please enter a valid Banquet ID.")
             self.delete_banquet()
         banquet_id = int(banquet_id)
         
-        self.banquet.delete(banquet_id)
+        self.db.banquet.delete(banquet_id)
         print("\n✅ Banquet deleted successfully.")
         self.display()
              
@@ -211,22 +203,22 @@ Banquet {i}:
         banquet_location = input("📍 Banquet Location: ").strip()
 
         print("\nSearching for banquets... 🔄")
-        result = self.banquet.read_by_filter( banquet_name, banquet_date, banquet_location, banquet_address)
+        result = self.db.banquet.read_by_filter( banquet_name, banquet_date, banquet_location, banquet_address)
         if result:
             print("\n✅ Search Results:\n")
             for i, banquet in enumerate(result, start=1):
                 banquet_date_time = f"{banquet[6]} at {banquet[7]}"
                 print(f"""
-Banquet {i}:
-    🆔 BID: {banquet[0]}
-    🏷️ Name: {banquet[1]}
-    🏠 Address: {banquet[2]}
-    📍 Location: {banquet[3]}
-    📅 Date & Time: {banquet_date_time}
-    🟢 Available: {banquet[8]}
-    🪑 Total Seats: {banquet[9]}
-    📞 Contact: {banquet[4]} {banquet[5]}
-            """)
+                        Banquet {i}:
+                            🆔 BID: {banquet[0]}
+                            🏷️ Name: {banquet[1]}
+                            🏠 Address: {banquet[2]}
+                            📍 Location: {banquet[3]}
+                            📅 Date & Time: {banquet_date_time}
+                            🟢 Available: {banquet[8]}
+                            🪑 Total Seats: {banquet[9]}
+                            📞 Contact: {banquet[4]} {banquet[5]}
+                                    """)
         else:
             print("\n❌ No banquets found matching the criteria.")
                 # Ask if the user wants to edit or go back
@@ -252,7 +244,7 @@ Banquet {i}:
     def edit_banquet(self):
         banquet_id = input("\n🆔 Enter the Banquet ID you want to edit: ").strip()
         # Check if the banquet ID is valid
-        your_banquet_ids = [str(banquet[0]) for banquet in self.banquet.get_banquets_by_admin(self.email)]
+        your_banquet_ids = [str(banquet[0]) for banquet in self.db.banquet.get_banquets_by_admin(self.email)]
         if not banquet_id.isdigit() or banquet_id not in your_banquet_ids:
             print("\n❌ Invalid Banquet ID. Please enter a valid Banquet ID.")
             self.edit_banquet()
@@ -296,7 +288,7 @@ Banquet {i}:
         else:
             banquet_available = None
         print("\nUpdating banquet... 🔄")
-        self.banquet.update(banquet_id, banquet_name, banquet_address, banquet_location, self.email, self.administrators.get_staff_info(self.email)['staffFirstName'], self.administrators.get_staff_info(self.email)['staffLastName'], banquet_date, banquet_time, banquet_available, banquet_seats)
+        self.db.banquet.update(banquet_id, banquet_name, banquet_address, banquet_location, self.email, self.db.administrators.get_staff_info(self.email)['staffFirstName'], self.db.administrators.get_staff_info(self.email)['staffLastName'], banquet_date, banquet_time, banquet_available, banquet_seats)
         
         print("\n✅ Banquet updated successfully.")
         
@@ -304,8 +296,8 @@ Banquet {i}:
         choice = input("👉 Enter your choice (Yes/No): ").strip().lower()
         if choice == 'yes':
             print("\nUpdating meals... 🔄")
-            self.banquet_meal.delete(banquet_id)
-            available_meals = self.meal.read()
+            self.db.banquet_meal.delete(banquet_id)
+            available_meals = self.db.meal.read()
             print("\nAvailable Meals:\n")
             print(available_meals)
 
@@ -313,11 +305,11 @@ Banquet {i}:
             for i in range(1, 5):
                 while True:
                     meal_name = input(f"👉 Enter Meal {i} Name: ").strip()
-                    if self.banquet_meal.check_meal_exists(banquet_id, meal_name):
+                    if self.db.banquet_meal.check_meal_exists(banquet_id, meal_name):
                         print("\n❌ Meal already exists in the banquet. Please select a different meal.")
                     elif self.validate_meal_name(meal_name):
                         meal_price = self.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
-                        print(self.banquet_meal.create(banquet_id, meal_name, meal_price))
+                        print(self.db.banquet_meal.create(banquet_id, meal_name, meal_price))
                         print(f"✅ Meal '{meal_name}' added successfully.")
                         break
                     elif not meal_name:
@@ -339,7 +331,7 @@ Banquet {i}:
         print("\nSearching attendees... 🔄")
         
         # Fetch attendee information
-        result = self.attendees.get(search_query)  # Assuming a function to get attendee info
+        result = self.db.attendees.get(search_query)  # Assuming a function to get attendee info
         if result:
             print("\n✅ Search completed! Attendee Information:\n")
             print(f"""
@@ -369,7 +361,7 @@ Banquet {i}:
             attendee_email = input("📧 Enter Attendee Email: ").strip()
         
         # Fetch current information for reference
-        current_info = self.attendees.get(attendee_email)  # Assuming a function to get attendee info
+        current_info = self.db.attendees.get(attendee_email)  # Assuming a function to get attendee info
         if not current_info:
             print("\n❌ Attendee not found. Returning to dashboard.")
             self.display()
@@ -394,7 +386,7 @@ Banquet {i}:
 
         # Update attendee information
         print("\nUpdating attendee information... 🔄")
-        update_result = self.attendees.admin_update_attendee_info(attendee_email, new_phone, new_address, new_type,
+        update_result = self.db.attendees.admin_update_attendee_info(attendee_email, new_phone, new_address, new_type,
                                                                   new_org)
         if "successfully" in update_result:
             print(f"\n✅ Attendee '{attendee_email}' updated successfully! ✅")
@@ -427,7 +419,7 @@ Banquet {i}:
     
     def generate_registration_status_report(self):
         data = pd.DataFrame(
-            self.reportgeneration.get_registration_status(),
+            self.report_generation.get_registration_status(),
             columns=["Banquet Name", "Total Seats", "Registered", "Available"]
         )
         print("\n🔍 Registration Status Report:")
@@ -443,7 +435,7 @@ Banquet {i}:
 
     def generate_popular_meals_report(self):
         # Fetch data from the database
-        meal_data = self.reportgeneration.get_popular_meals()  # Ensure this returns a list of tuples like [(mealName, popularity)]
+        meal_data = self.report_generation.get_popular_meals()  # Ensure this returns a list of tuples like [(mealName, popularity)]
         
         if not meal_data:
             print("\n❌ No data available for popular meals.")
@@ -485,7 +477,7 @@ Banquet {i}:
 
     def generate_attendance_behavior_report(self):
         data = pd.DataFrame(
-            self.reportgeneration.get_attendance_behavior(),
+            self.report_generation.get_attendance_behavior(),
             columns=["Banquet Date", "Attendance"]
         )
         print("\n🔍 Attendance Behavior Report:")
@@ -501,7 +493,7 @@ Banquet {i}:
 
     def generate_attendee_type_summary(self):
         data = pd.DataFrame(
-            self.reportgeneration.get_attendee_type_summary(),
+            self.report_generation.get_attendee_type_summary(),
             columns=["Attendee Type", "Registrations"]
         )
         print("\n🔍 Summary by Attendee Type:")
@@ -513,8 +505,9 @@ Banquet {i}:
         plt.xlabel("Registrations")
         plt.tight_layout()
         plt.show()
-           
-    def get_valid_date(self, prompt, allow_empty=False):
+
+    @staticmethod
+    def get_valid_date(prompt, allow_empty=False):
         while True:
             date_input = input(prompt).strip()
             if allow_empty and not date_input:
@@ -524,7 +517,8 @@ Banquet {i}:
             except ValueError:
                 print("\n❌ Invalid date format. Please use YYYY-MM-DD.")
 
-    def get_valid_time(self, prompt, allow_empty=False):
+    @staticmethod
+    def get_valid_time(prompt, allow_empty=False):
         while True:
             time_input = input(prompt).strip()
             if allow_empty and not time_input:
@@ -535,7 +529,8 @@ Banquet {i}:
             except ValueError:
                 print("\n❌ Invalid time format. Please use HH:MM:SS.")
 
-    def get_valid_number(self, prompt, allow_empty=False):
+    @staticmethod
+    def get_valid_number(prompt, allow_empty=False):
         while True:
             number_input = input(prompt).strip()
             if allow_empty and not number_input:
@@ -543,8 +538,9 @@ Banquet {i}:
             if number_input.isdigit():
                 return int(number_input)
             print("\n❌ Please enter a valid number.")
-            
-    def logout(self):
+
+    @staticmethod
+    def logout():
         print("\n" + "=" * 50)
         print("👋 Logging out of Admin Dashboard...")
         print("=" * 50)

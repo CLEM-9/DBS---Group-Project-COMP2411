@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
     email VARCHAR(100),
     mealName VARCHAR(100) NOT NULL,
     alcoholicDrink BIT NOT NULL,
-    seatAssignment INT,
+    seatAssigned INT,
     specialNeeds VARCHAR(128),
     regDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     seatingPreference1 VARCHAR(100),

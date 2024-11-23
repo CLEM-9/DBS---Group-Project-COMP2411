@@ -1,58 +1,6 @@
 from mysql.connector import Error
 from pyexpat.errors import messages
 
-
-class Database:
-    def __init__(self, cursor, connection):
-        self.cursor = cursor
-        self.connection = connection
-
-    def check_email(self, email, password):
-    # checks if logging_in user is attendee or administrator
-        try:
-            self.cursor.execute(
-                "SELECT * FROM Attendees WHERE email = %s AND password = %s",
-                (email, password)
-            )
-            if_attendee = self.cursor.fetchone()
-            self.cursor.execute(
-                "SELECT * FROM Administrators WHERE adminEmail = %s AND adminPassword = %s",
-                (email, password)
-            )
-            if_admin = self.cursor.fetchone()
-            if if_attendee:
-                print("Login successful!")
-                return ["Attendee", if_attendee[0], if_attendee[1], if_attendee[2], if_attendee[3], if_attendee[4], if_attendee[5], if_attendee[6], if_attendee[7]]
-            elif if_admin:
-                print("Login successful!")
-                return ["Administrator", if_admin[0], if_admin[1], if_admin[2], if_admin[3]]
-            else:
-                print("Login failed. Please try again.")
-
-        except Error as e:
-            print(f"Error code: {e}")
-
-    def check_email_exists(self, connection, email):
-        try:
-            # Query attendees
-            self.cursor.execute("SELECT * FROM Attendees WHERE email = %s", (email,))
-            if_attendee = self.cursor.fetchone()
-
-            # Query administrators
-            self.cursor.execute("SELECT * FROM Administrators WHERE adminEmail = %s", (email,))
-            if_admin = self.cursor.fetchone()
-
-            # Check existence
-            if if_attendee or if_admin:
-                return True
-            else:
-                return False
-
-        except Error as e:
-            print(f"Error code: {e}")
-            return False
-
-
 class Tables:
     def __init__(self, cursor, connection):
         self.cursor = cursor
@@ -196,12 +144,6 @@ class Attendees(Tables):
     def admin_update_attendee_info(self, emailID, phone= None, address= None, attendee_type= None, organization= None):
         self.update(emailID, phone=phone, address=address, attendeeType=attendee_type,
                     affiliateOrganization=organization)
-
-    def drop_database(self):
-        try:
-            self.cursor.execute("DROP DATABASE IF EXISTS banquet_database")
-        except Error as e:
-            print(f"Error code: {e}")
 
     # deletes user with the primary key "email"
     def delete(self, email):
@@ -428,6 +370,7 @@ class Banquet(Tables):
         except Error as e:
             return f"Could not delete banquet\nError code: {e}"
 
+
 class Meal(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
@@ -536,7 +479,7 @@ class Drink(Tables):
             return f"Could not delete drink\nError code: {e}"
 
 
-class BanquetDrinks(Tables):
+class BanquetDrink(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
         self.table_name = "BanquetDrinks"
@@ -661,6 +604,7 @@ class BanquetMeal(Tables):
             return f"{BID} deleted successfully."
         except Error as e:
             return f"Could not delete Meal from Banquet\nError code: {e}"
+
 
 class UserBanquetRegistration(Tables):
     def __init__(self, cursor, connection):
@@ -802,6 +746,7 @@ class UserBanquetRegistration(Tables):
         except Error as e:
             return f"Could not delete User Registration from Banquet\nError code: {e}"
 
+
 class Administrators(Tables):
     def __init__(self, cursor, connection):
         super().__init__(cursor, connection)
@@ -875,6 +820,7 @@ class Administrators(Tables):
             return f"Administrator {adminEmail} deleted successfully."
         except Error as e:
             return f"Could not delete Administrator\nError code: {e}"
+
 
 class ReportGeneration(Tables):
     def __init__(self, cursor, connection):

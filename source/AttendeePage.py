@@ -1,24 +1,14 @@
 import datetime
 import re
-from crud_operations import Database
-from crud_operations import Attendees
-from crud_operations import Banquet
-from crud_operations import UserBanquetRegistration
-from crud_operations import BanquetMeal
-from crud_operations import BanquetDrinks
 
 class AttendeePage:
-    def __init__(self, cursor, connection, email):
+    def __init__(self, cursor, connection, email, database):
         self.cursor = cursor
         self.connection = connection
         self.email = email
-        self.database = Database(cursor, connection)
-        self.attendees = Attendees(cursor, connection)
-        self.banquet = Banquet(cursor, connection)
-        self.meals = BanquetMeal(cursor, connection)
-        self.drinks = BanquetDrinks(cursor, connection)
-        self.banquet_registration = UserBanquetRegistration(cursor, connection)
-        
+        self.database = database
+
+    @staticmethod
     def is_valid_email(self, email):
         pattern = r'^[^@]+@[^@]+\.[^@]+$'
         return re.match(pattern, email) is not None
@@ -159,10 +149,10 @@ class AttendeePage:
         seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
         seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         # Validate seating preferences
-        while seating_preference1 and self.database.check_email_exists(self.connection, seating_preference1):
+        while seating_preference1 and self.database.check_email_exists(seating_preference1):
             print("❌ Email address already registered. Please try again.")
             seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
-        while seating_preference2 and self.database.check_email_exists(self.connection, seating_preference2):
+        while seating_preference2 and self.database.check_email_exists(seating_preference2):
             print("❌ Email address already registered. Please try again.")
             seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         if seating_preference1 or seating_preference2:

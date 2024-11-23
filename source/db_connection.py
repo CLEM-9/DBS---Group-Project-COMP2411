@@ -1,11 +1,9 @@
 import mysql.connector
 from mysql.connector import Error
-from db_setup import initialize_database
+from db_setup import BanquetDatabase
 from getpass import getpass
 
-DB_NAME = 'banquet_database'
-
-def get_db_connection():
+def get_db_connection(DB_NAME):
     """
     Establishes a connection to the MySQL database and initializes the required database and tables.
 
@@ -31,10 +29,6 @@ def get_db_connection():
             password=password
         )
         cursor = connection.cursor()
-
-        # Initialize the database and tables
-        print("\nPlease wait, initializing database...")
-        initialize_database(connection, cursor)
 
         if connection.is_connected():
             print("\n✅ Successfully connected to the MySQL database.")

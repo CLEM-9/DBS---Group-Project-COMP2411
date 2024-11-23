@@ -1,14 +1,13 @@
 from AdminPage import AdminPage
 from AttendeePage import AttendeePage
-from crud_operations import Database
 from crud_operations import Attendees
 from getpass import getpass
 
 class WelcomePage:
-    def __init__(self, cursor, connection):
+    def __init__(self, cursor, connection, database):
         self.cursor = cursor
         self.connection = connection
-        self.database = Database(cursor, connection)
+        self.database = database
 
     def display(self):
         print("\n" + "=" * 50)
@@ -50,11 +49,11 @@ class WelcomePage:
             self.display()
         elif user_type[0] == "Administrator":
             print("\n✅ Login successful! Welcome back, Administrator! ✅\n")
-            admin_page = AdminPage(self.cursor, self.connection, email)
+            admin_page = AdminPage(self.cursor, self.connection, email, self.database)
             admin_page.display()
         elif user_type[0] == "Attendee":
             print("\n✅ Login successful! Welcome back, Attendee! ✅\n")
-            attendee_page = AttendeePage(self.cursor, self.connection, email)
+            attendee_page = AttendeePage(self.cursor, self.connection, email, self.database)
             attendee_page.display()
 
     def register_attendee(self):
@@ -63,7 +62,7 @@ class WelcomePage:
         print("=" * 50)
         
         email = input("📧 Enter Email: ").strip()
-        while self.database.check_email_exists(self.connection, email):
+        while self.database.check_email_exists(email):
             print("\n❌ This email is already registered. Please log in or use a different email to register. ❌\n")
             email = input("📧 Enter Email: ").strip()
         while not email:
