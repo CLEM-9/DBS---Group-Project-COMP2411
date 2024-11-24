@@ -611,21 +611,12 @@ class UserBanquetRegistration(Tables):
         super().__init__(cursor, connection)
         self.table_name = "UserBanquetRegistration"
 
-    #TODO yes no to BIT
-    def create(self, BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2):
-        # Default values for optional fields
-        specialNeeds = specialNeeds or "None"
-        seatingPref1 = seatingPref1 or "None"
-        seatingPref2 = seatingPref2 or "None"
-
-        # SQL query to fetch the next seat assignment
-        seat_no_query = "SELECT COALESCE(MAX(seatAssigned), 0) + 1 AS nextSeat FROM UserBanquetRegistration"
-
+    def create(self, BID= None, email=  None, mealName= None, alcoholicDrink= None, specialNeeds= None, seatingPref1= None, seatingPref2= None):
         # SQL query to insert a new registration
         sql_insert = """
         INSERT INTO UserBanquetRegistration
-        (BID, email, mealName, alcoholicDrink, seatAssigned, specialNeeds, seatingPreference1, seatingPreference2)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        (BID, email, mealName, alcoholicDrink, specialNeeds, seatingPreference1, seatingPreference2)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
 
         # SQL query to decrement the available seats for the banquet
@@ -636,14 +627,10 @@ class UserBanquetRegistration(Tables):
         """
 
         try:
-            # Fetch the next seat number
-            self.cursor.execute(seat_no_query)
-            seat_no = self.cursor.fetchone()[0]  # Retrieve the next seat number
-            
             # Insert the registration
             self.cursor.execute(
                 sql_insert,
-                (BID, email, mealName, alcoholicDrink, seat_no, specialNeeds, seatingPref1, seatingPref2)
+                (BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2)
             )
             
             # Decrement the total seats, ensure no negative seats
@@ -653,7 +640,7 @@ class UserBanquetRegistration(Tables):
             
             # Commit the transaction
             self.connection.commit()
-            return f"Registration successful! Assigned Seat: {seat_no}. Banquet {BID}, Meal: {mealName}."
+            return f"Registration successful!\nAssigned Seat: Information will be provided at a later date.\n Banquet {BID}, Meal: {mealName}."
 
         except Exception as e:
             # Roll back the transaction in case of any error

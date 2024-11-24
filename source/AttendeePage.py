@@ -1,6 +1,7 @@
 import datetime
 import re
 
+from IPython.core.completer import back_latex_name_matcher
 from matplotlib.style.core import available
 
 
@@ -10,38 +11,45 @@ class AttendeePage:
         self.connection = connection
         self.email = email
         self.db = database
+        self.userLogged = True
 
     @staticmethod
     def is_valid_email(email):
-        pattern = r'^[^@]+@[^@]+\.[^@]+$'
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return re.match(pattern, email) is not None
 
     def display(self):
-        print("\n" + "=" * 50)
-        print(f"👤 Welcome to Your Dashboard ({self.email})")
-        print("=" * 50)
-        print("1️⃣  Search for a Banquet")
-        print("2️⃣  Register for a Banquet")
-        print("3️⃣  Update Account Information")
-        print("4️⃣  View Registered Banquets")
-        print("5️⃣  Logout")
-        print("=" * 50)
-        
-        choice = input("👉 Enter your choice (1-5): ").strip()
-        
-        if choice == '1':
-            self.search_banquet()
-        elif choice == '2':
-            self.register_for_banquet()
-        elif choice == '3':
-            self.update_account_info()
-        elif choice == '4':
-            self.search_registered_banquets()
-        elif choice == '5':
-            self.logout()
-        else:
-            print("\n❌ Invalid choice. Please try again. ❌")
-            self.display()
+        while self.userLogged:
+            print("\n" + "=" * 50)
+            print(f"👤 Welcome to Your Dashboard ({self.email})")
+            print("=" * 50)
+            print("1️⃣  Search for a Banquet")
+            print("2️⃣  Register for a Banquet")
+            print("3️⃣  Update Account Information")
+            print("4️⃣  View Registered Banquets")
+            print("5️⃣  Logout")
+            print("=" * 50)
+
+            choice = input("👉 Enter your choice (1-5): ").strip()
+
+            successful_operation = False
+            if choice == '1':
+                while not successful_operation:
+                    successful_operation= self.search_banquet()
+            elif choice == '2':
+                while not successful_operation:
+                    successful_operation = self.register_for_banquet()
+            elif choice == '3':
+                while not successful_operation:
+                    successful_operation = self.update_account_info()
+            elif choice == '4':
+                while not successful_operation:
+                    successful_operation = self.search_registered_banquets()
+            elif choice == '5':
+                self.logout()
+            else:
+                print("\n❌ Invalid choice. Please try again. ❌")
+        return
     
     def update_account_info(self):
         print("\n" + "=" * 50)
@@ -61,7 +69,6 @@ class AttendeePage:
         result = self.db.attendees.update(self.email, email, password, phone, first_name, last_name, address,
                                        attendee_type, affiliate_organization)
         print(result)
-        self.display()
 
     def search_banquet(self):
         print("\n" + "=" * 50)
@@ -76,7 +83,10 @@ class AttendeePage:
         banquet_location = input("📍 Banquet Location: ").strip()
 
         print("\nSearching for banquets... 🔄")
-        result = self.db.banquet.read_by_filter(banquet_name, banquet_date, banquet_location, banquet_address)
+        if not (banquet_name or banquet_date or banquet_address or banquet_location):
+            result = self.db.banquet.read()
+        else:
+            result = self.db.banquet.read_by_filter(banquet_name, banquet_date, banquet_location, banquet_address)
 
         if result:
             print("\n✅ Search Results:\n")
@@ -95,57 +105,64 @@ class AttendeePage:
                             """)
         else:
             print("\n❌ No banquets found matching the criteria.")
+        return True # takes back to main selection
 
-        self.display()
-
-    # TODO not working
     def register_for_banquet(self):
         print("\n" + "=" * 50)
         print("📝 Register for a Banquet")
         print("=" * 50)
-        banquet_id = input("🆔 Enter Banquet ID: ").strip()
+        banquet_id = input("🆔 Enter Banquet ID (leave empty to quit): ").strip()
+
+        # returning True will stop the registration loop and effectively let the user back
+        if not banquet_id:
+            return True # takes back to main selection
+
+        #fetches meals
+        banquet_meals = self.db.banquet_meal.show_meals(banquet_id)
+        if not banquet_meals:
+            print("❌ No meals found for this banquet.")
+            return True  # Exit the process if no meals are available
+
+        #fetches drinks
+        banquet_drinks = self.db.drinks.show_drinks(banquet_id)
+        if not banquet_drinks:
+            print("❌ No drinks found for this banquet.")
+            return True  # Exit the process if no meals are available
 
         # Check if user already joined the banquet
         if self.db.user_banquet_registration.read_by_user_and_banquet(self.email, banquet_id):
             print("❌ You have already registered for this banquet.")
-            self.display()
-            return
+            return True # takes back to main selection
 
         # Check if the banquet ID exists
         banquet_details = self.db.banquet.read_by_id(banquet_id)
         if not banquet_details:
             print("❌ Banquet ID not found. Please try again.")
-            self.register_for_banquet()
-            return
+            return False  # user tries again
 
+        # TODO Check this code execution
         # Show available meals
         print("\n🍽️  Banquet Meals:")
-        banquet_meals = self.db.banquet_meal.show_meals(banquet_id)
-
-        # Display available meals
-        if banquet_meals:
-            print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in banquet_meals]))
-        else:
-            print("❌ No meals found for this banquet.")
-            return  # Exit the process if no meals are available
+        print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in banquet_meals]))
 
         meal_name = input("👉 Enter Meal Name: ").strip()
         if meal_name:
             # Extract only the meal names for validation
             available_meals = [meal[0] for meal in banquet_meals]
             while meal_name not in available_meals:
-                print("❌ Invalid meal name. Please choose from the list below:")
+                print("❌ Invalid meal name. Beware of Caps. Please choose from the list below:")
                 print("\n".join(available_meals))  # Display available meal names
                 meal_name = input("👉 Enter Meal Name: ").strip()
-                # Show available drinks
-                print("\n🥂 Banquet Drinks:")
-                banquet_drinks = self.db.drinks.show_drinks(banquet_id)
-                print(banquet_drinks)
 
-        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
-        while alcoholic_drink not in ["Yes", "No"]:
+        # Display available meals
+        print("\n🍽️  Banquet Drinks:")
+        print("\n".join([f"{drink[0]}, ${drink[1]:.2f}" for drink in banquet_drinks]))
+
+        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
+        while alcoholic_drink not in ["yes", "no"]:
             print("❌ Invalid choice. Please enter 'Yes' or 'No'.")
             alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
+        alcoholic_drink = (alcoholic_drink == "yes")    # saved as bit -> if "yes" then 1 else 0
 
         # Collect additional information
         special_needs = input("💬 Special Needs (or press Enter for None): ").strip() or "None"
@@ -161,17 +178,16 @@ class AttendeePage:
             seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
         if seating_preference1 or seating_preference2:
             while (seating_preference1 and not self.is_valid_email(seating_preference1)) or \
-                (seating_preference2 and not self.is_valid_email(seating_preference2)):
+                    (seating_preference2 and not self.is_valid_email(seating_preference2)):
                 print("❌ Invalid email address. Please try again.")
                 seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
                 seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
 
         # Register for the banquet
-        result = self.db.user_banquet_registration.create(
-            banquet_id, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1 or None, seating_preference2 or None
-        )
-        print("\nRegistered successfully!")
-        self.display()
+        reg_msg = self.db.user_banquet_registration.create(
+            banquet_id, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1 or None, seating_preference2 or None)
+        print(reg_msg)
+        return True
 
     @staticmethod
     def format_datetime(date, time):
@@ -192,8 +208,7 @@ class AttendeePage:
         registered_banquets = self.db.user_banquet_registration.read_by_user(self.email)
         if not registered_banquets.strip():
             print("❌ No registered banquets.")
-            self.display()
-            return
+            return True
 
         banquet_entries = registered_banquets.split("\n")
         for i, entry in enumerate(banquet_entries, start=1):
@@ -204,19 +219,19 @@ class AttendeePage:
                 if banquet_details:
                     banquet_date_time = self.format_datetime(banquet_details[7], banquet_details[8])
                     print(f"""
-Banquet {i}:
-    🆔 BID: {BID}
-    🏷️  Name: {banquet_details[1]}
-    🏠 Address: {banquet_details[2]}
-    📍 Location: {banquet_details[3]}
-    📅 Date & Time: {banquet_date_time}
-    🪑 Seat No: {fields[4]}
-    🍽️  Meal: {fields[2]}
-    🥂 Alcoholic Drink: {fields[3]}
-    💬 Special Needs: {fields[5]}
-    👥 Seating Preferences: {fields[7]}, {fields[8]}
-    📞 Contact: {banquet_details[4]} {banquet_details[5]}
-""")
+                            Banquet {i}:
+                                🆔 BID: {BID}
+                                🏷️  Name: {banquet_details[1]}
+                                🏠 Address: {banquet_details[2]}
+                                📍 Location: {banquet_details[3]}
+                                📅 Date & Time: {banquet_date_time}
+                                🪑 Seat No: {fields[4]}
+                                🍽️  Meal: {fields[2]}
+                                🥂 Alcoholic Drink: {fields[3]}
+                                💬 Special Needs: {fields[5]}
+                                👥 Seating Preferences: {fields[7]}, {fields[8]}
+                                📞 Contact: {banquet_details[4]} {banquet_details[5]}
+                            """)
                 else:
                     print(f"❌ Banquet {i}: Could not fetch details for BID {BID}")
             except IndexError:
@@ -236,6 +251,7 @@ Banquet {i}:
         else:
             print("❌ Invalid choice. Please try again.")
             self.search_registered_banquets()
+        return True
 
     def delete_registration(self):
         print("\n" + "=" * 50)
@@ -313,9 +329,9 @@ Banquet {i}:
             BID, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1, seating_preference2)
         self.display()
 
-    @staticmethod
-    def logout():
+
+    def logout(self):
         print("\n" + "=" * 50)
         print("👋 Logging out... Goodbye!")
         print("=" * 50)
-        exit()
+        self.userLogged = False

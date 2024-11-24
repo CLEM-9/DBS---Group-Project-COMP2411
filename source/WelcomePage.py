@@ -68,7 +68,7 @@ class WelcomePage:
         while not email:
             print("\n❌ Email cannot be empty. Please enter a valid email. ❌\n")
             email = input("📧 Enter Email: ").strip()
-        while "@" not in email or "." not in email:
+        while not AttendeePage.is_valid_email(email):
             print("\n❌ Invalid email format. Please enter a valid email. ❌\n")
             email = input("📧 Enter Email: ").strip()
 
