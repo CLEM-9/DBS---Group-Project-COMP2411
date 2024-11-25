@@ -1,3 +1,4 @@
 /source/db_connection.py
 __pycache__/
 *.pyc
+/database/test_data_tables/errors in loading.txt

@@ -510,8 +510,9 @@ class BanquetDrink(Tables):
         try:
             self.cursor.execute(sql, values)
             result = self.cursor.fetchall()
-            unpacked_result = Tables.unpack_read_info(result)
-            return unpacked_result
+            if result:
+                return result  # Return a list of tuples (mealName, price)
+            return []  # Return an empty list if no meals are found
         except Error as e:
             return f"Could not read BanquetDrinks\nError code"
         
@@ -574,6 +575,7 @@ class BanquetMeal(Tables):
         except Error as e:
             print(f"Could not fetch meals for the banquet. Error: {e}")
             return []
+
     def check_meal_exists(self, BID, mealName):
         sql = "SELECT * FROM BanquetMeals WHERE BID = %s AND mealName = %s"
         values = [BID, mealName]
@@ -640,7 +642,7 @@ class UserBanquetRegistration(Tables):
             
             # Commit the transaction
             self.connection.commit()
-            return f"Registration successful!\nAssigned Seat: Information will be provided at a later date.\n Banquet {BID}, Meal: {mealName}."
+            return f"\nRegistration successful!\nAssigned Seat: Information will be provided at a later date.\nBanquet {BID}\nMeal: {mealName}\nAlcoholic Drink: {alcoholicDrink}\n"
 
         except Exception as e:
             # Roll back the transaction in case of any error

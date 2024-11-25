@@ -3,6 +3,7 @@ import numpy as np
 from mysql.connector import Error
 import pandas as pd
 import os
+import re
 
 class BanquetDatabase:
     def __init__(self, cursor, connection, name):
@@ -113,6 +114,11 @@ class BanquetDatabase:
         self.banquet_meal = BanquetMeal(self.cursor, self.connection)
         self.user_banquet_registration = UserBanquetRegistration(self.cursor, self.connection)
 
+    @staticmethod
+    def is_valid_email(email):
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
+
     def check_connection(self):
         if self.connection is None:
             print("Error: No self.connection to the database.")
@@ -123,20 +129,13 @@ class BanquetDatabase:
         print("Please wait, creating database...")
         try:
             self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.database_name} DEFAULT CHARACTER SET 'utf8'")
+            self.cursor.execute(f"USE {self.database_name}")
         except Error as err:
             print(f"Failed creating database.\nError Code: {err}")
             exit(1)
         pass
 
-    def create_tables(self):
-        self.check_connection()
-        print("Please wait, creating tables...")
-        try:
-            self.cursor.execute(f"USE {self.database_name}")
-        except Error as err:
-            print(f"Failed creating tables.\nError Code: {err}")
-
-    def load_testing_data(self):
+    def create_tables_load_testing_data(self):
         self.check_connection()
         print("\nPlease wait, populating database with test data...")
         try:
@@ -150,9 +149,8 @@ class BanquetDatabase:
         finally:
             self.connection.commit()
 
-    def setup_database_and_tables(self):
+    def setup_database(self):
         self.create_database()
-        self.create_tables()
         print("✅ Database setup successfully.")
 
     def check_email(self, email, password):
@@ -208,23 +206,22 @@ class BanquetDatabase:
 
     def insert_data_from_excel(self, table_name):
         file_path = os.path.join(os.path.dirname(__file__), f"../database/test_data_tables/{table_name}.xlsx")
-        try:
-            data = pd.read_excel(file_path)
-            data = data.replace({np.nan: None})
-            columns = data.columns.tolist()
-            columns_placeholder = ", ".join(columns)
-            placeholders = ", ".join(["%s"] * len(columns))
-            insert_query = f"INSERT IGNORE INTO {table_name}({columns_placeholder}) VALUES ({placeholders})"
-            for _, row in data.iterrows():
-                values = tuple(row)
+        data = pd.read_excel(file_path)
+        data = data.replace({np.nan: None})
+        columns = data.columns.tolist()
+        columns_placeholder = ", ".join(columns)
+        placeholders = ", ".join(["%s"] * len(columns))
+        insert_query = f"INSERT INTO {table_name}({columns_placeholder}) VALUES ({placeholders})"
+        for _, row in data.iterrows():
+            values = tuple(row)
+            try:
                 self.cursor.execute(insert_query, values)
-            self.connection.commit()
-            print(f"✅ Data from '{table_name}.xlsx' inserted successfully into '{table_name}'.")
-
-        except Error as e:
-            print(f"❌ Error inserting data into {table_name}: {e}")
-        except Exception as ex:
-            print(f"❌ General error: {ex}")
+            except Error as e:
+                print(f"❌ Error inserting data into {table_name}: {e}\n{values}")
+            except Exception as ex:
+                print(f"❌ General error: {ex}\n{values}")
+        self.connection.commit()
+        print(f"✅ Data from '{table_name}.xlsx' inserted successfully into '{table_name}'.")
 
     def insert_test_data(self):
         try:
