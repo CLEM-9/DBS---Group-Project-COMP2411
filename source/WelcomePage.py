@@ -49,7 +49,7 @@ class WelcomePage:
 
         #TODO switch to getpass on delivery
         #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
-        password = input("🔒 Enter Password (your password is invisible): ").strip()
+        password = input("🔒 Enter Password: ").strip()
 
         if back(password):
             return True
@@ -94,7 +94,7 @@ class WelcomePage:
 
         #TODO switch to getpass on delivery
         #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
-        password = input("🔒 Enter Password (your password is invisible): ").strip()
+        password = input("🔒 Enter Password: ").strip()
         while not password:
             print("\n❌ Password is required. Please provide a secure password. ❌\n")
             #TODO switch to getpass on delivery
