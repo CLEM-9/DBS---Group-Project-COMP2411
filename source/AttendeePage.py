@@ -84,15 +84,15 @@ class AttendeePage:
                 banquet_date_time = f"{banquet[4]} at {banquet[5]}"
                 available = "Yes" if banquet[6] else "No"
                 print(f"""
-                        Banquet {i}:
-                            🆔 BID: {banquet[0]}
-                            🏷️ Name: {banquet[1]}
-                            🏠 Address: {banquet[2]}
-                            📍 Location: {banquet[3]}
-                            📅 Date & Time: {banquet_date_time}
-                            🟢 Available: {available}
-                            🪑 Total Seats: {banquet[7]}
-                            """)
+Banquet {i}:
+    🆔 BID: {banquet[0]}
+    🏷️ Name: {banquet[1]}
+    🏠 Address: {banquet[2]}
+    📍 Location: {banquet[3]}
+    📅 Date & Time: {banquet_date_time}
+    🟢 Available: {available}
+    🪑 Total Seats: {banquet[7]}
+    """)
         else:
             print("\n❌ No banquets found matching the criteria.")
 

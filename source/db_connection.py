@@ -13,7 +13,6 @@ def get_db_connection(DB_NAME):
     try:
         print("\n" + "=" * 50)
         print("🔑 Welcome to the Banquet Database Connection Setup")
-        print("🔒 Your password will not be displayed on the screen for security purposes.")
         print("💡 If you need to change the MySQL username or host, edit 'db_connection.py'.")
         print("=" * 50)
 
@@ -25,7 +24,7 @@ def get_db_connection(DB_NAME):
         # Attempt to establish a connection
         connection = mysql.connector.connect(
             host='localhost',
-            user='test_user',
+            user='root',
             password=password
         )
         cursor = connection.cursor()

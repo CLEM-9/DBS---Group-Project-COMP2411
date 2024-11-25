@@ -33,13 +33,13 @@ class WelcomePage:
 
     def login(self):
         print("\n" + "=" * 50)
-        print("🔑 Login to Your Account")
+        print("🔑 Log In to Your Account")
         print("=" * 50)
         email = input("📧 Enter Email: ").strip()
 
         #TODO switch to getpass on delivery
         #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
-        password = input("🔒 Enter Password (your password is invisible): ").strip()
+        password = input("🔒 Enter Password: ").strip()
 
         print("\nAuthenticating your credentials... 🔄")
         user_type = self.database.check_email(email, password)
@@ -74,7 +74,7 @@ class WelcomePage:
 
         #TODO switch to getpass on delivery
         #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
-        password = input("🔒 Enter Password (your password is invisible): ").strip()
+        password = input("🔒 Enter Password: ").strip()
         while not password:
             print("\n❌ Password is required. Please provide a secure password. ❌\n")
             #TODO switch to getpass on delivery
