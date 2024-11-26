@@ -177,12 +177,12 @@ class Banquet(Tables):
         self.table_name = "Banquet"
 
     # creates new banquet entry, banquetID is handled automatically by the database
-    def create(self, banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats):
+    def create(self, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats):
         sql = """
         INSERT INTO Banquet(banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
-        values = (banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats)
+        values = (banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats)
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -281,7 +281,7 @@ class Banquet(Tables):
             return result
         except Error as e:
             return f"Could not read banquets\nError code: {e}"
-    
+
     def get_id(self, banquet_date, banquet_time, banquet_address):
         sql = "SELECT BID FROM Banquet WHERE banquetDate = %s AND banquetTime = %s AND address = %s"
         values = [banquet_date, banquet_time, banquet_address]
@@ -292,7 +292,7 @@ class Banquet(Tables):
         except Error as e:
             return f"Could not read banquet\nError code: {e}"
          
-    def update(self, BID, banquetName, address, location, staffEmail, staffFirstName, staffLastName, banquetDate, banquetTime, available, totalSeats):
+    def update(self, BID, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats):
         sql = "UPDATE Banquet SET "
         values = []
         message = "Following fields are updated:\n"
@@ -313,14 +313,6 @@ class Banquet(Tables):
             sql += "staffEmail = %s, "
             values.append(staffEmail)
             message += f"staffEmail = {staffEmail}\n"
-        if staffFirstName:
-            sql += "staffFirstName = %s, "
-            values.append(staffFirstName)
-            message += f"staffFirstName = {staffFirstName}\n"
-        if staffLastName:
-            sql += "staffLastName = %s, "
-            values.append(staffLastName)
-            message += f"staffLastName = {staffLastName}\n"
         if banquetDate:
             sql += "banquetDate = %s, "
             values.append(banquetDate)
@@ -742,7 +734,7 @@ class Administrators(Tables):
             return f"Could not create Administrator\nError code: {e}"
         
     def get_staff_info(self, staffEmail):
-        sql = "SELECT adminName, adminLastName FROM Administrators WHERE adminEmail = %s"
+        sql = "SELECT firstName, lastName FROM Attendees WHERE email = %s"
         values = [staffEmail]
         try:
             self.cursor.execute(sql, values)

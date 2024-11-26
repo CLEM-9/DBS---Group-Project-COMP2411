@@ -98,7 +98,7 @@ class BanquetDatabase:
                 "  CHECK (seatingPreference1 LIKE '%_@_%._%'),"
                 "  CHECK (seatingPreference2 LIKE '%_@_%._%'),"
                 "  FOREIGN KEY (BID) REFERENCES BanquetMeals(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
-                "  FOREIGN KEY (mealName) REFERENCES BanquetMeals(mealName) ON UPDATE CASCADE ON DELETE RESTRICT,"
+                "  FOREIGN KEY (mealName) REFERENCES BanquetMeals(mealName) ON UPDATE CASCADE ON DELETE CASCADE,"
                 "  FOREIGN KEY (email) REFERENCES Attendees(email) ON UPDATE CASCADE ON DELETE RESTRICT"
                 ")"
         }
@@ -184,7 +184,6 @@ class BanquetDatabase:
         meal_name = input("👉 Enter Meal Name: ").strip()
         while not self.back(meal_name) and (meal_name not in available_meals and not self.back(meal_name)) :
             print("❌ Invalid meal name. Beware of Caps. Please choose from the list below:")
-            print("\n".join(available_meals))  # Display available meal names
             meal_name = input("👉 Enter Meal Name: ").strip()
         return meal_name
 
@@ -220,7 +219,7 @@ class BanquetDatabase:
     def validate_staff(self, staff_email):
         self.cursor.execute("SELECT attendeeType FROM Attendees WHERE email = %s", [staff_email])
         is_staff = self.cursor.fetchone()
-        if is_staff == "Staff":
+        if is_staff[0] == "Staff":
             return True
         return False
 

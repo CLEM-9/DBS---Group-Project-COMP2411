@@ -84,12 +84,12 @@ class AdminPage:
         if self.db.back(banquet_seats):
             return True
 
-        staff_info = self.db.input_staff_email()
-        if self.db.back(staff_info):
+        staff_email = self.db.input_staff_email()
+        if self.db.back(staff_email):
             return True
             
         print("\nCreating banquet... 🔄")
-        result = self.db.banquet.create(banquet_name, banquet_address, banquet_location, self.email, staff_first_name, staff_last_name, banquet_date, banquet_time, "Yes", banquet_seats)
+        result = self.db.banquet.create(banquet_name, banquet_address, banquet_location, staff_email, banquet_date, banquet_time, 1, banquet_seats)
         
         if "created successfully" in result:
             banquet_id = self.db.banquet.get_id(banquet_date, banquet_time, banquet_address)
@@ -115,8 +115,9 @@ class AdminPage:
         print("\nYou need to assign four meals to the banquet.")
         for i in range(1, 5):
             while True:
-                meal_name = self.db.input_meal_name()
+                meal_name = self.db.input_meal_name(available_meals)
                 if self.db.back(meal_name):
+                    self.db.banquet.delete(banquet_id)
                     return True
                 if self.db.banquet_meal.check_meal_exists(banquet_id, meal_name):
                     print("\n❌ Meal already exists in the banquet. Please select a different meal.")
@@ -124,10 +125,13 @@ class AdminPage:
                     meal_price = self.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
                     print(self.db.banquet_meal.create(banquet_id, meal_name, meal_price))
                     print(f"✅ Meal '{meal_name}' added successfully.")
+                    break
                 elif not meal_name:
                     print("\n❌ Meal name cannot be empty. Please enter a valid meal name.")
                 else:
                     print("\n❌ Invalid meal name. Please select a meal from the available list.")
+            print("\n✅ Banquet and Meals added successfully")
+        return True
 
     # This method is called when the admin wants to add drinks to a banquet
     def add_drinks_to_banquet(self, banquet_id):
@@ -155,38 +159,6 @@ class AdminPage:
         available_meals = self.db.meal.read()
         available_meal_names = [meal.split(", ")[0] for meal in available_meals.split("\n") if meal]
         return meal_name in available_meal_names
-
-    # This method is called when the admin wants to see the banquets they have created
-    def see_banquet(self):
-        print("\n" + "=" * 50)
-        print("✏️ Update Your Banquets")
-        print("=" * 50)
-
-        # Fetch all the banquets created by this admin
-        your_banquets = self.db.banquet.get_banquets_by_admin(self.email)
-
-        # Check if there are any banquets
-        if not your_banquets:
-            print("\n❌ No banquets found for your account.")
-            return True
-
-        # Print the banquets in a formatted way
-        print("\n📋 Your Banquets:\n")
-        for i, banquet in enumerate(your_banquets, start=1):
-            banquet_date_time = f"{banquet[4]} at {banquet[5]}"
-            available = "Yes" if banquet[6] else "No"
-            print(f"""
-                    Banquet {i}:
-                        🆔 BID: {banquet[0]}
-                        🏷️  Name: {banquet[1]}
-                        🏠 Address: {banquet[2]}
-                        📍 Location: {banquet[3]}
-                        📅 Date & Time: {banquet_date_time}
-                        🟢 Available: {available}
-                        🪑 Total Seats: {banquet[7]}
-                                """)
-        print("=" * 50)
-        return True
     
     def delete_banquet(self):
         print("\n" + "=" * 50)
@@ -199,7 +171,7 @@ class AdminPage:
         banquet_ids = [str(banquet[0]) for banquet in self.db.banquet.read()]
         if not banquet_id.isdigit() or banquet_id not in banquet_ids:
             print("\n❌ Invalid Banquet ID. Please enter a valid Banquet ID.")
-            self.delete_banquet()
+            return False
         banquet_id = int(banquet_id)
         
         self.db.banquet.delete(banquet_id)
@@ -219,7 +191,7 @@ class AdminPage:
             return True
         banquet_date = input("📅 Banquet Date (YYYY-MM-DD): ").strip()
         banquet_address = input("🏠 Banquet Address: ").strip()
-        banquet_location = self.db.input_banquet_location()
+        banquet_location = self.db.input_location(False)
         if self.db.back(banquet_location):
             return True
 
@@ -242,20 +214,22 @@ Banquet {i}:
             """)
         else:
             print("\n❌ No banquets found matching the criteria.")
-                # Ask if the user wants to edit or go back
-                
+            return True
+
+        # Ask if the user wants to edit or go back
         print("1️⃣ Edit a Banquet")
         print("2️⃣ Delete a Banquet")
-        print("3️⃣ See Banquets Created by You")
-        print("4️⃣ Go back to Dashboard")
+        print("3️⃣ Go back to Dashboard")
         choice = input("👉 Enter your choice (1/2/3): ").strip()
+
+        successful_operation = False
         if choice == '1':
-            self.edit_banquet()
+            while not successful_operation:
+                successful_operation = self.edit_banquet()
         elif choice == '2':
-            self.delete_banquet()
+            while not successful_operation:
+                successful_operation = self.delete_banquet()
         elif choice == '3':
-            self.see_banquet()
-        elif choice == '4':
             return True # Assume this method redirects to the dashboard
         else:
             print("\n❌ Invalid choice.")
@@ -269,7 +243,7 @@ Banquet {i}:
         your_banquet_ids = [str(banquet[0]) for banquet in self.db.banquet.get_banquets_by_admin(self.email)]
         if not banquet_id.isdigit() or banquet_id not in your_banquet_ids:
             print("\n❌ Invalid Banquet ID. Please enter a valid Banquet ID.")
-            self.edit_banquet()
+            return False
         banquet_id = int(banquet_id)
         print("If you want to skip a field, just press Enter.")
         banquet_name = self.db.input_banquet_name(False)
