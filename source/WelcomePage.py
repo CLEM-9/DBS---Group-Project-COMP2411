@@ -2,9 +2,6 @@ from AdminPage import AdminPage
 from AttendeePage import AttendeePage
 from getpass import getpass
 
-def back(var):
-    return var == "##"
-
 class WelcomePage:
     def __init__(self, cursor, connection, database):
         self.cursor = cursor
@@ -30,12 +27,17 @@ class WelcomePage:
             if choice == '1':
                 print("\n" + "=" * 50)
                 print("🔑 Login to Your Account")
-                print("=" * 50)
-                print("## to quit anytime\n")
+                print("    ## to quit anytime")
+                print("=" * 50 + "\n")
                 while not successful_operation:
                     successful_operation = self.login()
             elif choice == '2':
-                self.register_attendee()
+                print("\n" + "=" * 50)
+                print("📝 Register as a New Attendee")
+                print("    ## to quit anytime\n")
+                print("=" * 50 + "\n")
+                while not successful_operation:
+                    successful_operation = self.register_attendee()
             elif choice == '3':
                 self.exit_program()
             else:
@@ -44,14 +46,14 @@ class WelcomePage:
     def login(self):
         email = input("📧 Enter Email: ").strip()
 
-        if back(email):
+        if self.database.back(email):
             return True
 
         #TODO switch to getpass on delivery
         #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
         password = input("🔒 Enter Password: ").strip()
 
-        if back(password):
+        if self.database.back(password):
             return True
 
         print("\nAuthenticating your credentials... 🔄")
@@ -61,12 +63,12 @@ class WelcomePage:
             print("\n❌ Invalid email or password. Please check your credentials and try again. ❌\n")
             return False
         elif user_type[0] == "Administrator":
-            print("\n✅ Login successful! Welcome back, Administrator! ✅")
+            print("\n✅ Login successful! Welcome self.database.back, Administrator! ✅")
             admin_page = AdminPage(self.cursor, self.connection, email, self.database)
             admin_page.display()
             return True
         elif user_type[0] == "Attendee":
-            print("\n✅ Login successful! Welcome back, Attendee! ✅\n")
+            print("\n✅ Login successful! Welcome self.database.back, Attendee! ✅\n")
             attendee_page = AttendeePage(self.cursor, self.connection, email, self.database)
             attendee_page.display()
             return True
@@ -74,79 +76,34 @@ class WelcomePage:
             return False
 
     def register_attendee(self):
-        print("\n" + "=" * 50)
-        print("📝 Register as a New Attendee")
-        print("=" * 50)
-        print("## to quit anytime\n")
-
-        email = input("📧 Enter Email: ").strip()
-
-        while not back(email) and self.database.check_email_exists(email):
-            print("\n❌ This email is already registered. Please log in or use a different email to register. ❌\n")
-            email = input("📧 Enter Email: ").strip()
-        while not back(email) and not self.database.is_valid_email(email):
-            print("\n❌ Invalid email format. Please enter a valid email. ❌\n")
-            email = input("📧 Enter Email: ").strip()
-
-        # returns to previous
-        if back(email):
+        email = self.database.input_email()
+        if self.database.back(email):
             return True
 
-        #TODO switch to getpass on delivery
-        #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
-        password = input("🔒 Enter Password: ").strip()
-        while not password:
-            print("\n❌ Password is required. Please provide a secure password. ❌\n")
-            #TODO switch to getpass on delivery
-            #password = getpass("🔒 Create Password: ").strip()
-            password = input("🔒 Create Password: ").strip()
+        password = self.database.input_password()
 
-        first_name = input("👤 Enter First Name: ").strip()
-        while not back(first_name) and not first_name or not first_name.isalpha():
-            print("\n❌ First name is required and must only contain letters. Please try again. ❌\n")
-            first_name = input("👤 Enter First Name: ").strip()
-
-        if back(first_name):
+        first_name = self.database.input_name("First")
+        if self.database.back(first_name):
             return True
 
-        last_name = input("👤 Enter Last Name: ").strip()
-        while not back(last_name) and not last_name or not last_name.isalpha():
-            print("\n❌ Last name is required and must only contain letters. Please try again. ❌\n")
-            last_name = input("👤 Enter Last Name: ").strip()
-
-        if back(last_name):
+        last_name = self.database.input_name("Last")
+        if self.database.back(last_name):
             return True
 
-        phone = input("📞 Enter Phone Number: ").strip()
-        while not back(phone) and phone and (not phone.isdigit() or len(phone) != 8):
-            print("\n❌ Phone number must be 8 digits and numeric. Please enter a valid number. ❌\n")
-            phone = input("📞 Enter Phone Number: ").strip()
-
-        if back(phone):
+        phone = self.database.input_phone()
+        if self.database.back(phone):
             return True
 
-        address = input("🏠 Enter Address: ").strip()
-        while not back(address) and not address:
-            print("\n❌ Address cannot be empty. Please enter a valid address. ❌\n")
-            address = input("🏠 Enter Address: ").strip()
-
-        if back(address):
+        address = self.database.input_address()
+        if self.database.back(address):
             return True
 
-        attendee_type = input("🎓 Enter Attendee Type (Student, Alumni, Staff, Guest): ").strip()
-        while not back(attendee_type) and attendee_type not in ["Student", "Alumni", "Staff", "Guest"]:
-            print("\n❌ Please select a valid attendee type: Student, Alumni, Staff, or Guest. ❌\n")
-            attendee_type = input("🎓 Enter Attendee Type: ").strip()
-
-        if back(attendee_type):
+        attendee_type = self.database.input_attendee_type()
+        if self.database.back(attendee_type):
             return True
 
-        affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
-        while not back(affiliate_organization) and not affiliate_organization:
-            print("\n❌ Organization name is required. Please provide a valid name. ❌\n")
-            affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
-
-        if back(affiliate_organization):
+        affiliate_organization = self.database.input_affiliate_organization()
+        if self.database.back(affiliate_organization):
             return True
 
         print("\nValidating your information... 🔄")
@@ -157,6 +114,7 @@ class WelcomePage:
         print(f"\n✅ Registration successful! Welcome, {first_name}. You can now explore your dashboard! ✅\n")
         attendee_page = AttendeePage(self.cursor, self.connection, email, self.database)
         attendee_page.display()
+        return True
 
     def exit_program(self):
         self.exit = True

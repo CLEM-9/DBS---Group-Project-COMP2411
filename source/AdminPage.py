@@ -12,67 +12,81 @@ class AdminPage:
         self.email = email
         self.db = database
         self.report_generation = ReportGeneration(self.cursor, self.connection)
+        self.userLogged = True
 
     # This method is called when the admin logs in, and it displays the admin dashboard
     def display(self):
-        print("\n" + "=" * 50)
-        print(f"👨‍💼 Admin Dashboard (Logged in as: {self.email}) 👩‍💼")
-        print("=" * 50)
-        print("Please choose an action:\n")
-        print("1️⃣  Create a New Banquet")
-        print("2️⃣  See and Edit Banquets")
-        print("3️⃣  Search for Attendees")
-        print("4️⃣  Edit Attendee Information")
-        print("5️⃣  Generate Reports")
-        print("6️⃣  Logout")
-        print("=" * 50)
+        while self.userLogged:
+            print("\n" + "=" * 50)
+            print(f"👨‍💼 Admin Dashboard (Logged in as: {self.email}) 👩‍💼")
+            print("=" * 50)
+            print("Please choose an action:\n")
+            print("1️⃣  Create a New Banquet")
+            print("2️⃣  See and Edit Banquets")
+            print("3️⃣  Search for Attendees")
+            print("4️⃣  Edit Attendee Information")
+            print("5️⃣  Generate Reports")
+            print("6️⃣  Logout")
+            print("=" * 50)
 
-        choice = input("👉 Enter your choice (1-6): ").strip()
+            choice = input("👉 Enter your choice (1-6): ").strip()
 
-        if choice == '1':
-            self.create_banquet()
-        elif choice == '2':
-            self.search_banquets()
-        elif choice == '3':
-            self.search_attendees()
-        elif choice == '4':
-            self.edit_attendee_info()
-        elif choice == '5':
-            self.generate_report()
-        elif choice == '6':
-            self.logout()
-        else:
-            print("\n❌ Invalid choice. Please try again. ❌")
-            self.display()
+            successful_operation = False
+            if choice == '1':
+                while not successful_operation:
+                    successful_operation = self.create_banquet()
+            elif choice == '2':
+                while not successful_operation:
+                    successful_operation = self.search_banquets()
+            elif choice == '3':
+                while not successful_operation:
+                    successful_operation = self.search_attendees()
+            elif choice == '4':
+                while not successful_operation:
+                    successful_operation = self.edit_attendee_info()
+            elif choice == '5':
+                    self.generate_report()
+            elif choice == '6':
+                self.logout()
+                return True
+            else:
+                print("\n❌ Invalid choice. Please try again. ❌")
+        return True
 
     # This method is called when the admin wants to create a new banquet
     def create_banquet(self):
         print("\n" + "=" * 50)
         print("🎉 Create a New Banquet")
+        print("## to quit anytime")
         print("=" * 50)
-        banquet_name = input("🏷️ Enter Banquet Name: ").strip()
-        while not banquet_name:
-            print("\n❌ Banquet Name cannot be empty. Please try again.")
-            banquet_name = input("🏷️ Enter Banquet Name: ").strip()
-        banquet_date = self.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ")
-        banquet_time = self.get_valid_time("⏰ Enter Banquet Time (HH:MM:SS): ")
-        banquet_location = input("📍 Enter Location: ").strip()
-        while not banquet_location:
-            print("\n❌ Banquet Location cannot be empty.")
-            banquet_location = input("📍 Enter Location: ").strip()
-        banquet_address = input("🏠 Enter Address: ").strip()
-        while not banquet_address:
-            print("\n❌ Banquet Address cannot be empty.")
-            banquet_address = input("🏠 Enter Address: ").strip()
-        banquet_seats = self.get_valid_number("💺 Enter Total Seats: ")
-        
-        staff_info = self.db.administrators.get_staff_info(self.email)
-        if not staff_info:
-            print("❌ Could not fetch staff information.")
-            return
 
-        staff_first_name = staff_info['staffFirstName']
-        staff_last_name = staff_info['staffLastName']
+        banquet_name = self.db.input_banquet_name()
+        if self.db.back(banquet_name):
+            return True
+
+        banquet_date = self.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ")
+        if self.db.back(banquet_date):
+            return True
+
+        banquet_time = self.get_valid_time("⏰ Enter Banquet Time (HH:MM:SS): ")
+        if self.db.back(banquet_time):
+            return True
+
+        banquet_location = self.db.input_location()
+        if self.db.back(banquet_location):
+            return True
+
+        banquet_address = self.db.input_address()
+        if self.db.back(banquet_address):
+            return True
+
+        banquet_seats = self.get_valid_number("💺 Enter Total Seats: ")
+        if self.db.back(banquet_seats):
+            return True
+
+        staff_info = self.db.input_staff_email()
+        if self.db.back(staff_info):
+            return True
             
         print("\nCreating banquet... 🔄")
         result = self.db.banquet.create(banquet_name, banquet_address, banquet_location, self.email, staff_first_name, staff_last_name, banquet_date, banquet_time, "Yes", banquet_seats)
@@ -80,11 +94,12 @@ class AdminPage:
         if "created successfully" in result:
             banquet_id = self.db.banquet.get_id(banquet_date, banquet_time, banquet_address)
             print(result)
-            self.add_meals_to_banquet(banquet_id)
-            self.add_drinks_to_banquet(banquet_id)
+            if self.add_meals_to_banquet(banquet_id):
+                return True
+            if self.add_drinks_to_banquet(banquet_id):
+                return True
         else:
             print(result)
-        self.display()
 
     # This method is called when the admin wants to add meals to a banquet
     def add_meals_to_banquet(self, banquet_id):
@@ -99,14 +114,15 @@ class AdminPage:
         print("\nYou need to assign four meals to the banquet.")
         for i in range(1, 5):
             while True:
-                meal_name = input(f"👉 Enter Meal {i} Name: ").strip()
+                meal_name = self.db.input_meal_name()
+                if self.db.back(meal_name):
+                    return True
                 if self.db.banquet_meal.check_meal_exists(banquet_id, meal_name):
                     print("\n❌ Meal already exists in the banquet. Please select a different meal.")
                 elif self.validate_meal_name(meal_name):
                     meal_price = self.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
                     print(self.db.banquet_meal.create(banquet_id, meal_name, meal_price))
                     print(f"✅ Meal '{meal_name}' added successfully.")
-                    break
                 elif not meal_name:
                     print("\n❌ Meal name cannot be empty. Please enter a valid meal name.")
                 else:
@@ -151,8 +167,7 @@ class AdminPage:
         # Check if there are any banquets
         if not your_banquets:
             print("\n❌ No banquets found for your account.")
-            self.display()  # Redirect to the dashboard or ask the user to create a banquet
-            return
+            return True
 
         # Print the banquets in a formatted way
         print("\n📋 Your Banquets:\n")
@@ -170,7 +185,7 @@ class AdminPage:
                         🪑 Total Seats: {banquet[7]}
                                 """)
         print("=" * 50)
-        self.display()
+        return True
     
     def delete_banquet(self):
         print("\n" + "=" * 50)
@@ -188,7 +203,7 @@ class AdminPage:
         
         self.db.banquet.delete(banquet_id)
         print("\n✅ Banquet deleted successfully.")
-        self.display()
+        return True
              
     # This method is called when the admin wants to search for a banquet      
     def search_banquets(self):
@@ -196,11 +211,16 @@ class AdminPage:
         print("🔍 Search for a Banquet")
         print("=" * 50)
         print("Enter the details to search, or leave fields blank to skip.\n")
-        
-        banquet_name = input("🏷️  Banquet Name (You do not have to provide whole name): ").strip()
+
+        # TODO get verified info
+        banquet_name = self.db.input_banquet_name()
+        if self.db.back(banquet_name):
+            return True
         banquet_date = input("📅 Banquet Date (YYYY-MM-DD): ").strip()
         banquet_address = input("🏠 Banquet Address: ").strip()
-        banquet_location = input("📍 Banquet Location: ").strip()
+        banquet_location = self.db.input_banquet_location()
+        if self.db.back(banquet_location):
+            return True
 
         print("\nSearching for banquets... 🔄")
         result = self.db.banquet.read_by_filter( banquet_name, banquet_date, banquet_location, banquet_address)
@@ -235,10 +255,10 @@ Banquet {i}:
         elif choice == '3':
             self.see_banquet()
         elif choice == '4':
-            self.display()  # Assume this method redirects to the dashboard
+            return True # Assume this method redirects to the dashboard
         else:
-            print("\n❌ Invalid choice. Returning to dashboard.")
-            self.display()
+            print("\n❌ Invalid choice.")
+            return False
     
     # This method is called when the admin wants to edit a banquet   
     def edit_banquet(self):
@@ -250,7 +270,7 @@ Banquet {i}:
             self.edit_banquet()
         banquet_id = int(banquet_id)
         print("If you want to skip a field, just press Enter.")
-        banquet_name = input("🏷️ Enter Banquet Name: ").strip() or None
+        banquet_name = self.db.input_banquet_name(False)
         banquet_date = input("📅 Enter Banquet Date (YYYY-MM-DD): ").strip()
         if banquet_date:
             while True:
@@ -271,7 +291,7 @@ Banquet {i}:
                 banquet_time = input("⏰ Enter Banquet Time (HH:MM:SS): ").strip()
         else:
             banquet_time = None
-        banquet_location = input("📍 Enter Location: ").strip() or None
+        banquet_location = self.db.input_banquet_location(False)
         banquet_address = input("🏠 Enter Address: ").strip() or None
         banquet_seats = input("💺 Enter Total Seats: ").strip()
         if banquet_seats:
@@ -319,8 +339,8 @@ Banquet {i}:
                     
                     print("\n✅ Meals updated successfully.")
         else:
-            print("\nReturning to dashboard.")  
-        self.display()
+            print("\nReturning to dashboard.")
+        return True
     
     # This method is called when the admin wants to search for attendees 
     def search_attendees(self):
@@ -350,7 +370,7 @@ Banquet {i}:
         if choice == 'yes':
             self.edit_attendee_info(search_query)
         else:
-            self.display()
+            return True
 
     # This method is called when the admin wants to edit an attendee's information
     def edit_attendee_info(self, attendee_email=None):
@@ -364,8 +384,7 @@ Banquet {i}:
         current_info = self.db.attendees.get(attendee_email)  # Assuming a function to get attendee info
         if not current_info:
             print("\n❌ Attendee not found. Returning to dashboard.")
-            self.display()
-            return
+            return True
 
         print("\nCurrent Information:")
         print(f"""
@@ -378,7 +397,7 @@ Banquet {i}:
         """)
         print("Leave fields blank to keep them unchanged.")
 
-        # Update fields
+        # Update fields TODO MAKE FUNCTIONS TO GET CORRECT INPUT
         new_phone = input("📞 Enter New Phone Number: ").strip() or current_info['phone']
         new_address = input("🏠 Enter New Address: ").strip() or current_info['address']
         new_type = input("🎓 Enter New Type (Student/Alumni/Staff/Guest): ").strip() or current_info['attendeeType']
@@ -392,7 +411,7 @@ Banquet {i}:
             print(f"\n✅ Attendee '{attendee_email}' updated successfully! ✅")
         else:
             print(f"\n❌ Failed to update attendee information.\n{update_result}")
-        self.display()
+        return True
 
     # This method is called when the admin wants to generate a registration status report
     def generate_report(self):
@@ -415,7 +434,7 @@ Banquet {i}:
             self.generate_attendee_type_summary()
         else:
             print("\n❌ Invalid choice. Returning to dashboard.")
-        self.display()
+        return
     
     def generate_registration_status_report(self):
         data = pd.DataFrame(
@@ -506,9 +525,9 @@ Banquet {i}:
         plt.tight_layout()
         plt.show()
 
-    @staticmethod
-    def get_valid_date(prompt, allow_empty=False):
-        while True:
+    def get_valid_date(self, prompt, allow_empty=False):
+        date_input = None
+        while not self.db.back(date_input):
             date_input = input(prompt).strip()
             if allow_empty and not date_input:
                 return None
@@ -517,9 +536,9 @@ Banquet {i}:
             except ValueError:
                 print("\n❌ Invalid date format. Please use YYYY-MM-DD.")
 
-    @staticmethod
-    def get_valid_time(prompt, allow_empty=False):
-        while True:
+    def get_valid_time(self, prompt, allow_empty=False):
+        time_input = None
+        while not self.db.back(time_input):
             time_input = input(prompt).strip()
             if allow_empty and not time_input:
                 return None
@@ -529,9 +548,9 @@ Banquet {i}:
             except ValueError:
                 print("\n❌ Invalid time format. Please use HH:MM:SS.")
 
-    @staticmethod
-    def get_valid_number(prompt, allow_empty=False):
-        while True:
+    def get_valid_number(self, prompt, allow_empty=False):
+        number_input = None
+        while not self.db.back(number_input):
             number_input = input(prompt).strip()
             if allow_empty and not number_input:
                 return None
@@ -539,8 +558,8 @@ Banquet {i}:
                 return int(number_input)
             print("\n❌ Please enter a valid number.")
 
-    @staticmethod
-    def logout():
+    def logout(self):
+        self.userLogged = False
         print("\n" + "=" * 50)
         print("👋 Logging out of Admin Dashboard...")
         print("=" * 50)

@@ -3,9 +3,6 @@ from dataclasses import field
 
 from db_setup import BanquetDatabase
 
-def back(var):
-    return var == "##"
-
 class AttendeePage:
     def __init__(self, cursor, connection, email, database):
         self.cursor = cursor
@@ -41,26 +38,33 @@ class AttendeePage:
             elif choice == '4':
                 while not successful_operation:
                     successful_operation = self.search_registered_banquets()
+                    if successful_operation:    # if search_registered_banquet is successful
+                        successful_operation = False  # resets state
+                        while not successful_operation: # proceeds to next operation
+                            successful_operation = self.delete_edit_registration()
+                    else:
+                        successful_operation = not successful_operation
             elif choice == '5':
                 self.logout()
             else:
                 print("\n❌ Invalid choice. Please try again. ❌")
-        return
-    
+        return True
+
     def update_account_info(self):
         print("\n" + "=" * 50)
         print("✏️ Update Your Account Information")
         print("=" * 50)
         print("Leave fields blank to keep them unchanged.")
-        
-        email = input("📧 New Email: ").strip() or self.email
-        password = input("🔒 New Password: ").strip()
-        first_name = input("👤 New First Name: ").strip()
-        last_name = input("👤 New Last Name: ").strip()
-        phone = input("📞 New Phone Number: ").strip()
-        address = input("🏠 New Address: ").strip()
-        attendee_type = input("🎓 New Attendee Type (Student, Alumni, Staff, Guest): ").strip()
-        affiliate_organization = input("🏢 New Affiliate Organization: ").strip()
+
+        # false parameter means the input can be null
+        email = self.db.input_email(False) or self.email
+        password = self.db.input_password(False) or None
+        first_name = self.db.input_name("First", False) or None
+        last_name = self.db.input_name("Last", False) or None
+        phone = self.db.input_phone(False) or None
+        address = self.db.input_address(False) or None
+        attendee_type = self.db.input_attendee_type(False) or None
+        affiliate_organization = self.db.input_affiliate_organization(False) or None
         
         result = self.db.attendees.update(self.email, email, password, phone, first_name, last_name, address,
                                        attendee_type, affiliate_organization)
@@ -72,7 +76,8 @@ class AttendeePage:
         print("=" * 50)
         print("Enter the details to filter, or leave fields blank to skip.\n")
         print("📝 Note down the Banquet ID which you want to register.")
-        
+
+        #TODO verify correctness of parameters
         banquet_name = input("🏷️  Banquet Name: ").strip()
         banquet_date = input("📅 Banquet Date (YYYY-MM-DD): ").strip()
         banquet_address = input("🏠 Banquet Address: ").strip()
@@ -111,10 +116,10 @@ Banquet {i}:
 
         banquet_id = input("🆔 Enter Banquet ID: ").strip()
         while not banquet_id:
-            input("❌ Please insert a Banquet ID: ").strip()
+            banquet_id = input("❌ Please insert a Banquet ID: ").strip()
 
         # returning True will stop the registration loop and effectively let the user back
-        if back(banquet_id):
+        if self.db.back(banquet_id):
             return True # takes back to main selection
 
         # Check if the banquet ID exists
@@ -142,60 +147,38 @@ Banquet {i}:
 
         # Show available meals
         print("\n🍽️  Banquet Meals:")
-        print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in banquet_meals]))
-
+        for meal in banquet_meals:
+            print("\n".join(f"{meal[0]}, ${meal[1]:.2f}"))
 
         # Extract only the meal names for validation
         available_meals = [meal[0] for meal in banquet_meals]
-
-        meal_name = input("👉 Enter Meal Name: ").strip()
-        while meal_name not in available_meals and not back(meal_name):
-            print("❌ Invalid meal name. Beware of Caps. Please choose from the list below:")
-            print("\n".join(available_meals))  # Display available meal names
-            meal_name = input("👉 Enter Meal Name: ").strip()
-
-        if back(meal_name):
+        meal_name = self.db.input_meal_name(available_meals)
+        if self.db.back(meal_name):
             return True
 
-        # Display available meals
+        # Display available Drinks
         print("\n🍽️  Banquet Drinks:")
-        for drink in banquet_drinks:
-            print("\n".join([f"{drink[0]}, ${drink[1]:.2f}"]))
+        print("\n".join([f"{drink[0]}, ${drink[1]:.2f}" for drink in banquet_drinks]))
 
-        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
-        while alcoholic_drink not in ["yes", "no"] and not back(alcoholic_drink):
-            print("❌ Invalid choice. Please enter 'Yes' or 'No'.")
-            alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
-
-        if back(alcoholic_drink):
+        alcoholic_drink = self.db.input_alcoholic_drink()
+        if self.db.back(alcoholic_drink):
             return True
-
         alcoholic_drink = (alcoholic_drink == "yes")    # saved as bit -> if "yes" then 1 else 0
 
         # Collect additional information
         special_needs = input("💬 Special Needs (or press Enter for None): ").strip() or "None"
-
-        if back(special_needs):
+        if self.db.back(special_needs):
             return True
 
         print("👥 Seating Preferences:")
-        seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
+        seating_preference1 = self.db.input_seating_preference("first")
         seating_preference2 = None
-        # Validate seating preferences
-        while not back(seating_preference1) and seating_preference1 and not self.db.is_valid_email(seating_preference1):
-            print("❌ Email address is invalid. Please try again.")
-            seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
-
-        if back(seating_preference1):
+        if self.db.back(seating_preference1):
             return True
 
         if seating_preference1:
-            seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
-            while not back(seating_preference2) and seating_preference2 and not self.db.is_valid_email(seating_preference2):
-                print("❌ Email address is invalid. Please try again.")
-                seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
-
-            if back(seating_preference2):
+            seating_preference2 = self.db.input_seating_preference("second")
+            if self.db.back(seating_preference2):
                 return True
 
        # Register for the banquet
@@ -223,7 +206,7 @@ Banquet {i}:
         registered_banquets = self.db.user_banquet_registration.read_by_user(self.email)
         if not registered_banquets.strip():
             print("❌ No registered banquets.")
-            return True
+            return False
 
         banquet_entries = registered_banquets.split("\n")
         for i, entry in enumerate(banquet_entries, start=1):
@@ -249,47 +232,49 @@ Banquet {i}:
 """)
                 else:
                     print(f"❌ Banquet {i}: Could not fetch details for BID {BID}")
+                    return False
             except IndexError:
                 print(f"❌ Error processing entry: {entry}")
+                return False
+        return True
 
-        print("\n1️⃣  Delete a Registration")
+    def delete_edit_registration(self):
+        print("1️⃣  Delete a Registration")
         print("2️⃣  Edit your Registration")
         print("3️⃣  Go back to Dashboard")
-        choice = input("👉 Enter your choice (1/2/3): ").strip()
+        choice = input("\n👉 Enter your choice (1/2/3): ").strip()
 
+        successful_operation = False
         if choice == '1':
-            self.delete_registration()
+            while not successful_operation:
+                successful_operation = self.delete_registration()
         elif choice == '2':
-            self.edit_registration()
+            while not successful_operation:
+                successful_operation = self.edit_registration()
         elif choice == '3':
             return True
         else:
             print("❌ Invalid choice. Please try again.")
-            self.search_registered_banquets()
+            return False
         return True
 
     def delete_registration(self):
-        print("\n" + "=" * 50)
-        print("🗑️ Delete a Registration")
-        print("=" * 50)
-        
-        choice = input("❓ Are you sure you want to delete a registration? (Yes/No): ").strip()
-        if choice.lower() == 'no':
-            self.display()
-        elif choice.lower() == 'yes':
-            BID = input("🆔 Enter Banquet ID to delete the registration: ").strip()
-            if not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
-                print("❌ You have not registered for this banquet.")
-                self.display()
-            elif not BID:
-                print("❌ Banquet ID is required to delete registration.")
-                self.delete_registration()
-            result = self.db.user_banquet_registration.delete(BID, self.email)
-            print(result)
-            self.display()
+        BID = input("🆔 Enter Banquet ID to delete the registration: ").strip()
+        if not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
+            print("❌ You have not registered for this banquet.")
+            return False
+        elif not BID:
+            print("❌ Banquet ID is required to delete registration.")
+            return False
         else:
-            print("❌ Invalid choice. Please try again.")
-            self.delete_registration()
+            choice = input("❓ Are you sure you want to delete a registration? (Yes/No): ").strip()
+            if choice.lower() == 'no':
+                print("Registration NOT deleted")
+                return True
+            elif choice.lower() == 'yes':
+                result = self.db.user_banquet_registration.delete(BID, self.email)
+                print(result)
+                return True
 
     def edit_registration(self):
         print("\n" + "=" * 50)
@@ -299,50 +284,48 @@ Banquet {i}:
         BID = input("🆔 Enter Banquet ID: ").strip()
         if not BID:
             print("❌ Banquet ID is required to update registration.")
-            self.search_registered_banquets()
+            return False
         elif not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
             print("❌ You have not registered for this banquet or there is no Banquet with this BID.")
-            self.display()
-            
-        meals = self.db.meal.show_meals(BID)  # Fetch meals for the banquet
-        print("\n🍽️  Banquet Meals:")
+            return False
+
+        meals = self.db.banquet_meal.show_meals(BID)  # Fetch meals for the banquet
 
         if meals:
             # Display available meals in a formatted manner
+            print("\n🍽️  Banquet Meals:")
             print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in meals]))
         else:
             print("❌ No meals found for this banquet.")
-            return  # Exit if no meals are available
+            return  True    # Exit if no meals are available
 
-        meal_name = input("🍽️  Enter New Meal Name: ").strip() or None
-        if meal_name:
-            # Extract the list of valid meal names for the banquet
-            available_meals = [meal[0] for meal in meals]
-            while meal_name not in available_meals:
-                print("❌ Invalid meal name. Please choose from the list below:")
-                print("\n".join(available_meals))  # Display valid meal names
-                meal_name = input("👉 Enter Meal Name: ").strip()
-                
-        drink_options = ["Yes", "No"]
-        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip() or None
-        if alcoholic_drink:
-            while alcoholic_drink not in drink_options:
-                print("❌ Invalid choice. Please enter 'Yes' or 'No'.")
-                alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip()
-                
+        available_meals = [meal[0] for meal in meals]
+        meal_name = self.db.input_meal_name(available_meals) #false means can be null
+        if self.db.back(meal_name):
+            return True
+
+        alcoholic_drink = self.db.input_alcoholic_drink()
+        if self.db.back(alcoholic_drink):
+            return True
+        alcoholic_drink = (alcoholic_drink == "yes")
+
         special_needs = input("💬 Special Needs (or press Enter for None): ").strip() or None
-        
-        seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip() or None
-        seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip() or None
-        if seating_preference1 or seating_preference2:
-            while (seating_preference1 and not self.db.is_valid_email(seating_preference1)) or (seating_preference2 and not self.db.is_valid_email(seating_preference2)):
-                print("❌ Invalid email address. Please try again.")
-                seating_preference1 = input("👉 Enter Email of First Person (or press Enter to skip): ").strip()
-                seating_preference2 = input("👉 Enter Email of Second Person (or press Enter to skip): ").strip()
-        print("\nUpdating registration... 🔄")
+
+        print("👥 Seating Preferences:")
+        seating_preference1 = self.db.input_seating_preference("first")
+        seating_preference2 = None
+        if self.db.back(seating_preference1):
+            return True
+
+        if seating_preference1:
+            seating_preference2 = self.db.input_seating_preference("second")
+            if self.db.back(seating_preference2):
+                return True
+
         result = self.db.user_banquet_registration.update(
             BID, self.email, meal_name, alcoholic_drink, special_needs, seating_preference1, seating_preference2)
-        self.display()
+        print(result)
+        return True
 
 
     def logout(self):

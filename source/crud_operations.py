@@ -73,17 +73,7 @@ class Attendees(Tables):
         values = []
         message = "Following fields are updated:\n"
 
-        # Normalize inputs
-        email = email.strip() if email else None
-        password = password.strip() if password else None
-        phone = phone.strip() if phone else None
-        firstName = firstName.strip().title() if firstName else None
-        lastName = lastName.strip().title() if lastName else None
-        address = address.strip() if address else None
-        attendeeType = attendeeType.strip().title() if attendeeType else None
-        affiliateOrganization = affiliateOrganization.strip() if affiliateOrganization else None
-
-        # Update fields dynamically
+                # Update fields dynamically
         if email:
             sql = sql + "email = %s, "
             values.append(email)

@@ -63,6 +63,26 @@ class BanquetDatabase:
                 "  isAlcoholic BIT"
                 ")"
             ,
+            'BanquetMeals':
+                "CREATE TABLE IF NOT EXISTS BanquetMeals ("
+                "  BID INT,"
+                "  mealName VARCHAR(100),"
+                "  price INT,"
+                "  PRIMARY KEY (BID, mealName),"
+                "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
+                "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE ON DELETE CASCADE"
+                ")"
+            ,
+                'BanquetDrinks':
+                "CREATE TABLE IF NOT EXISTS BanquetDrinks ("
+                "  BID INT,"
+                "  drinkName VARCHAR(100),"
+                "  price INT,"
+                "  PRIMARY KEY (BID, drinkName),"
+                "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
+                "  FOREIGN KEY (drinkName) REFERENCES Drink(drinkName) ON UPDATE CASCADE ON DELETE CASCADE"
+                ")"
+                ,
             'UserBanquetRegistration':
                 "CREATE TABLE IF NOT EXISTS UserBanquetRegistration ("
                 "  BID INT,"
@@ -77,29 +97,9 @@ class BanquetDatabase:
                 "  PRIMARY KEY (BID, email),"
                 "  CHECK (seatingPreference1 LIKE '%_@_%._%'),"
                 "  CHECK (seatingPreference2 LIKE '%_@_%._%'),"
-                "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE,"
-                "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE,"
-                "  FOREIGN KEY (email) REFERENCES Attendees(email) ON UPDATE CASCADE ON DELETE CASCADE"
-                ")"
-            ,
-            'BanquetMeals':
-                "CREATE TABLE IF NOT EXISTS BanquetMeals ("
-                "  BID INT,"
-                "  mealName VARCHAR(100),"
-                "  price INT,"
-                "  PRIMARY KEY (BID, mealName),"
-                "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
-                "  FOREIGN KEY (mealName) REFERENCES Meal(mealName) ON UPDATE CASCADE ON DELETE CASCADE"
-                ")"
-            ,
-            'BanquetDrinks':
-                "CREATE TABLE IF NOT EXISTS BanquetDrinks ("
-                "  BID INT,"
-                "  drinkName VARCHAR(100),"
-                "  price INT,"
-                "  PRIMARY KEY (BID, drinkName),"
-                "  FOREIGN KEY (BID) REFERENCES Banquet(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
-                "  FOREIGN KEY (drinkName) REFERENCES Drink(drinkName) ON UPDATE CASCADE ON DELETE CASCADE"
+                "  FOREIGN KEY (BID) REFERENCES BanquetMeals(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
+                "  FOREIGN KEY (mealName) REFERENCES BanquetMeals(mealName) ON UPDATE CASCADE ON DELETE RESTRICT,"
+                "  FOREIGN KEY (email) REFERENCES Attendees(email) ON UPDATE CASCADE ON DELETE RESTRICT"
                 ")"
         }
 
@@ -115,9 +115,127 @@ class BanquetDatabase:
         self.user_banquet_registration = UserBanquetRegistration(self.cursor, self.connection)
 
     @staticmethod
+    def back(var):
+        return var == "##"
+
+    @staticmethod
     def is_valid_email(email):
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return re.match(pattern, email) is not None
+
+    def input_email(self):
+        email = input("📧 Enter Email: ").strip()
+        while not self.back(email) and self.check_email_exists(email):
+            print("\n❌ This email is already registered. Please log in or use a different email to register. ❌\n")
+            email = input("📧 Enter Email: ").strip()
+        while not self.back(email) and not self.is_valid_email(email):
+            print("\n❌ Invalid email format. Please enter a valid email. ❌\n")
+            email = input("📧 Enter Email: ").strip()
+        return email
+
+    @staticmethod
+    def input_password():
+        #TODO switch to getpass on delivery
+        #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
+        password = input("🔒 Enter Password: ").strip()
+        while not password:
+            print("\n❌ Password is required. Please provide a secure password. ❌\n")
+            #TODO switch to getpass on delivery
+            #password = getpass("🔒 Create Password: ").strip()
+            password = input("🔒 Create Password: ").strip()
+        return password
+
+    def input_name(self, word= "First", not_null = True):
+        name = input(f"👤 Enter {word} Name: ").strip()
+        while not self.back(name) and (not_null and not name or not name.isalpha()):
+            print(f"\n❌ {word} name is required and must only contain letters. Please try again. ❌\n")
+            name = input(f"👤 Enter {word} Name: ").strip()
+        return name
+
+    def input_phone(self, not_null = True):
+        phone = input("📞 Enter Phone Number: ").strip()
+        while not self.back(phone) and ((not_null and not phone) or (not phone.isdigit() or len(phone) != 8)):
+            print("\n❌ Phone number must be 8 digits and numeric. Please enter a valid number. ❌\n")
+            phone = input("📞 Enter Phone Number: ").strip()
+        return phone
+
+    def input_address(self, not_null = True):
+        address = input("🏠 Enter Address: ").strip()
+        while not self.back(address) and (not_null and not address):
+            print("\n❌ Address cannot be empty. Please enter a valid address. ❌\n")
+            address = input("🏠 Enter Address: ").strip()
+        return address
+
+    def input_attendee_type(self, not_null = True):
+        attendee_type = input("🎓 Enter Attendee Type (Student, Alumni, Staff, Guest): ").strip()
+        while not self.back(attendee_type) and (not_null and attendee_type not in ["Student", "Alumni", "Staff", "Guest"]):
+            print("\n❌ Please select a valid attendee type: Student, Alumni, Staff, or Guest. ❌\n")
+            attendee_type = input("🎓 Enter Attendee Type: ").strip()
+        return attendee_type
+
+    def input_affiliate_organization(self, not_null = True):
+        affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
+        while not self.back(affiliate_organization) and (not_null and not affiliate_organization):
+            print("\n❌ Organization name is required. Please provide a valid name. ❌\n")
+            affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
+        return affiliate_organization
+
+    def input_meal_name(self, available_meals):
+        meal_name = input("👉 Enter Meal Name: ").strip()
+        while not self.back(meal_name) and (meal_name not in available_meals and not self.back(meal_name)) :
+            print("❌ Invalid meal name. Beware of Caps. Please choose from the list below:")
+            print("\n".join(available_meals))  # Display available meal names
+            meal_name = input("👉 Enter Meal Name: ").strip()
+        return meal_name
+
+    def input_alcoholic_drink(self):
+        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
+        while alcoholic_drink not in ["yes", "no"] and not self.back(alcoholic_drink):
+            print("❌ Invalid choice. Please enter 'Yes' or 'No'.")
+            alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
+        return alcoholic_drink
+
+    def input_seating_preference(self, word = "first"):
+        seating_preference = input(f"👉 Enter Email of {word} preference (or press Enter to skip): ").strip()
+        # Validate seating preferences
+        while not self.back(seating_preference) and seating_preference and not self.is_valid_email(seating_preference):
+            print("❌ Email address is invalid. Please try again.")
+            seating_preference = input(f"👉 Enter Email of {word} preference (or press Enter to skip): ").strip()
+        return seating_preference
+
+    def input_banquet_name(self, not_null= True):
+        banquet_name = input("🏷️ Enter Banquet Name: ").strip()
+        while not self.back(banquet_name) and (not_null and not banquet_name):
+            print("\n❌ Banquet Name cannot be empty. Please try again.")
+            banquet_name = input("🏷️ Enter Banquet Name: ").strip()
+        return banquet_name
+
+    def input_location(self, not_null= True):
+        banquet_location = input("📍 Enter Location: ").strip()
+        while not self.back(banquet_location) and (not_null and not banquet_location):
+            print("\n❌ Banquet Location cannot be empty.")
+            banquet_location = input("📍 Enter Location: ").strip()
+        return banquet_location
+
+    def validate_staff(self, staff_email):
+        self.cursor.execute("SELECT attendeeType FROM Attendees WHERE email = %s", [staff_email])
+        is_staff = self.cursor.fetchone()
+        if is_staff == "Staff":
+            return True
+        return False
+
+    def input_staff_email(self):
+        staff_email = input("📧 Enter Staff Email: ")
+        while not self.back(staff_email):
+            if self.is_valid_email(staff_email):
+                if self.validate_staff(staff_email):
+                    return staff_email
+                else:
+                    print("\n❌ Email does not belong to staff. Please input staff email")
+            else:
+                print("\n❌ Email format is incorrect. Please try again")
+            staff_email = input("📧 Enter Staff Email: ")
+        return staff_email
 
     def check_connection(self):
         if self.connection is None:
@@ -181,18 +299,17 @@ class BanquetDatabase:
     def check_email_exists(self, email):
         try:
             # Query attendees
-            self.cursor.execute("SELECT * FROM Attendees WHERE email = %s", (email,))
+            self.cursor.execute("SELECT * FROM Attendees WHERE email = %s", [email])
             if_attendee = self.cursor.fetchone()
 
             # Query administrators
-            self.cursor.execute("SELECT * FROM Administrators WHERE adminEmail = %s", (email,))
+            self.cursor.execute("SELECT * FROM Administrators WHERE adminEmail = %s", [email])
             if_admin = self.cursor.fetchone()
 
             # Check existence
             if if_attendee or if_admin:
                 return True
-            else:
-                return False
+            return False
 
         except Error as e:
             print(f"Error code: {e}")

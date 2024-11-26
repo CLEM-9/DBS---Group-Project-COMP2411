@@ -24,7 +24,7 @@ def get_db_connection(DB_NAME):
         # Attempt to establish a connection
         connection = mysql.connector.connect(
             host='localhost',
-            user='root',
+            user='test_user',
             password=password
         )
         cursor = connection.cursor()
@@ -32,7 +32,7 @@ def get_db_connection(DB_NAME):
         if connection.is_connected():
             print("\n✅ Successfully connected to the MySQL database.")
             connection.database = DB_NAME  # Switch to the correct database
-            return connection, connection.cursor()
+            return connection, cursor
         else:
             print("\n❌ Failed to connect to the MySQL database. Please check your credentials.")
             return None, None

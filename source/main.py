@@ -9,11 +9,11 @@ if __name__ == "__main__":
     BMS_database = BanquetDatabase(cursor, connection, DB_NAME)
 
     # TODO drop database, delete before submitting
-    BMS_database.drop_database()
+    #BMS_database.drop_database()
 
     # sets up the database and tables
-    BMS_database.setup_database()
-    BMS_database.create_tables_load_testing_data()
+    #BMS_database.setup_database()
+    #BMS_database.create_tables_load_testing_data()
 
     if connection and cursor:
         welcome_page = WelcomePage(cursor, connection, BMS_database)

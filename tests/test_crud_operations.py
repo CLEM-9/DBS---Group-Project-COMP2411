@@ -2,8 +2,7 @@ from unittest import TestCase
 from source.crud_operations import *
 from source.db_connection import get_db_connection
 
-connection = get_db_connection()
-cursor = connection.cursor()
+connection, cursor = get_db_connection("banquet_database")
 user = Attendees(cursor, connection)
 email = "<EMAIL@MAIL.IT>"
 password = "<PASSWORD>"
