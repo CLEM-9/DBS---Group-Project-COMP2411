@@ -100,6 +100,7 @@ class AdminPage:
                 return True
         else:
             print(result)
+        return True
 
     # This method is called when the admin wants to add meals to a banquet
     def add_meals_to_banquet(self, banquet_id):
@@ -259,6 +260,7 @@ Banquet {i}:
         else:
             print("\n❌ Invalid choice.")
             return False
+        return True
     
     # This method is called when the admin wants to edit a banquet   
     def edit_banquet(self):
@@ -371,6 +373,7 @@ Banquet {i}:
             self.edit_attendee_info(search_query)
         else:
             return True
+        return True
 
     # This method is called when the admin wants to edit an attendee's information
     def edit_attendee_info(self, attendee_email=None):
@@ -434,7 +437,7 @@ Banquet {i}:
             self.generate_attendee_type_summary()
         else:
             print("\n❌ Invalid choice. Returning to dashboard.")
-        return
+        return True
     
     def generate_registration_status_report(self):
         data = pd.DataFrame(
@@ -468,7 +471,7 @@ Banquet {i}:
         # Check if data contains at least one non-zero popularity
         if data["Popularity"].sum() == 0:
             print("\n⚠️ All meals have zero popularity.")
-            return
+            return True
 
         # Visualization: Bar chart of meal popularity
         data.sort_values("Popularity", ascending=False, inplace=True)  # Sort by popularity
@@ -493,6 +496,7 @@ Banquet {i}:
         )
         plt.ylabel("")
         plt.show()
+        return True
 
     def generate_attendance_behavior_report(self):
         data = pd.DataFrame(
@@ -509,6 +513,7 @@ Banquet {i}:
         plt.grid(True)
         plt.tight_layout()
         plt.show()
+        return True
 
     def generate_attendee_type_summary(self):
         data = pd.DataFrame(
@@ -524,6 +529,7 @@ Banquet {i}:
         plt.xlabel("Registrations")
         plt.tight_layout()
         plt.show()
+        return True
 
     def get_valid_date(self, prompt, allow_empty=False):
         date_input = None
@@ -563,4 +569,4 @@ Banquet {i}:
         print("\n" + "=" * 50)
         print("👋 Logging out of Admin Dashboard...")
         print("=" * 50)
-        exit()
+        return True

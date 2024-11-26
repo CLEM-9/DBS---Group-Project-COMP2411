@@ -721,9 +721,9 @@ class UserBanquetRegistration(Tables):
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
-            return "User Registration deleted successfully from Banquet."
+            return "User Registration deleted successfully."
         except Error as e:
-            return f"Could not delete User Registration from Banquet\nError code: {e}"
+            return f"Could not delete User Registration\nError code: {e}"
 
 
 class Administrators(Tables):

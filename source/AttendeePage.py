@@ -57,8 +57,8 @@ class AttendeePage:
         print("Leave fields blank to keep them unchanged.")
 
         # false parameter means the input can be null
-        email = self.db.input_email(False) or self.email
-        password = self.db.input_password(False) or None
+        email = self.db.input_email() or self.email
+        password = self.db.input_password() or None
         first_name = self.db.input_name("First", False) or None
         last_name = self.db.input_name("Last", False) or None
         phone = self.db.input_phone(False) or None
@@ -69,6 +69,7 @@ class AttendeePage:
         result = self.db.attendees.update(self.email, email, password, phone, first_name, last_name, address,
                                        attendee_type, affiliate_organization)
         print(result)
+        return True
 
     def search_banquet(self):
         print("\n" + "=" * 50)
@@ -147,8 +148,7 @@ Banquet {i}:
 
         # Show available meals
         print("\n🍽️  Banquet Meals:")
-        for meal in banquet_meals:
-            print("\n".join(f"{meal[0]}, ${meal[1]:.2f}"))
+        print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in banquet_meals]))
 
         # Extract only the meal names for validation
         available_meals = [meal[0] for meal in banquet_meals]
@@ -275,6 +275,7 @@ Banquet {i}:
                 result = self.db.user_banquet_registration.delete(BID, self.email)
                 print(result)
                 return True
+        return True
 
     def edit_registration(self):
         print("\n" + "=" * 50)
@@ -333,3 +334,4 @@ Banquet {i}:
         print("👋 Logging out... Goodbye!")
         print("=" * 50)
         self.userLogged = False
+        return True
