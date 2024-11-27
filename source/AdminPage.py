@@ -1,6 +1,6 @@
 from crud_operations import ReportGeneration
 from datetime import datetime
-import random
+from mysql.connector import Error
 import pandas as pd
 import matplotlib.pyplot as plt
 from tabulate import tabulate
@@ -102,12 +102,13 @@ class AdminPage:
         if "created successfully" in result:
             banquet_id = self.db.banquet.get_id(banquet_date, banquet_time, banquet_address)
             print(result)
-            if self.add_meals_to_banquet(banquet_id):
+            if not self.add_meals_to_banquet(banquet_id):
                 return True
-            if self.add_drinks_to_banquet(banquet_id):
+            if not self.add_drinks_to_banquet(banquet_id):
                 return True
         else:
             print(result)
+        print("✅ Banquet created successfully")
         return True
 
     # This method is called when the admin wants to add meals to a banquet
@@ -120,47 +121,71 @@ class AdminPage:
         print("\nAvailable Meals:\n")
         print(available_meals)
 
-        print("\nYou need to assign four meals to the banquet.")
+        print("\nYou must assign four meals to the banquet.")
         for i in range(1, 5):
             while True:
                 meal_name = self.db.input_meal_name(available_meals)
                 if self.db.back(meal_name):
                     self.db.banquet.delete(banquet_id)
-                    return True
+                    return False
                 if self.db.banquet_meal.check_meal_exists(banquet_id, meal_name):
                     print("\n❌ Meal already exists in the banquet. Please select a different meal.")
-                elif self.validate_meal_name(meal_name):
-                    meal_price = self.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
-                    print(self.db.banquet_meal.create(banquet_id, meal_name, meal_price))
-                    print(f"✅ Meal '{meal_name}' added successfully.")
-                    break
-                elif not meal_name:
-                    print("\n❌ Meal name cannot be empty. Please enter a valid meal name.")
-                else:
-                    print("\n❌ Invalid meal name. Please select a meal from the available list.")
-            print("\n✅ Banquet and Meals added successfully")
+                    continue
+                meal_price = self.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
+                self.db.banquet_meal.create(banquet_id, meal_name, meal_price)
+                print(f"✅ Meal '{meal_name}' added successfully.\n")
+                break
+        print("\n✅ Meals added successfully")
         return True
 
     # This method is called when the admin wants to add drinks to a banquet
     def add_drinks_to_banquet(self, banquet_id):
-        print("\nAdding drinks to the banquet... 🔄")
-        available_drinks = self.db.drink.read()
+        available_drinks = self.db.drink.read().split('\n')
+        alcoholic_drinks = []
+        non_alcoholic_drinks = []
 
-        alcoholic_drinks = [drink for drink in available_drinks.split("\n") if "Yes" in drink]
-        non_alcoholic_drinks = [drink for drink in available_drinks.split("\n") if "No" in drink]
+        for drink in available_drinks:
+            drink = drink[:-2].split(',')
+            isAlcoholic = int(drink[1])
+            if isAlcoholic:
+                alcoholic_drinks.append(drink[0])
+            else:
+                non_alcoholic_drinks.append(drink[0])
 
-        if not alcoholic_drinks or not non_alcoholic_drinks:
+        total_drinks = len(alcoholic_drinks) + len(non_alcoholic_drinks)
+
+        if not (alcoholic_drinks and non_alcoholic_drinks):
             print("\n❌ Unable to add drinks. Make sure the drink table has both alcoholic and non-alcoholic options.")
-            return
+            return False
 
-        selected_alcoholic = random.choice(alcoholic_drinks)
-        selected_non_alcoholic = random.choice(non_alcoholic_drinks)
+        print("\nAlcoholic Drinks:")
+        print("".join(f"\t{drink}\n" for drink in alcoholic_drinks))
+        print("\nAlcohol FREE Drinks:")
+        print("".join(f"\t{drink}\n" for drink in non_alcoholic_drinks))
 
-        for drink in [selected_alcoholic, selected_non_alcoholic]:
-            drink_name = drink.split(", ")[0]
-            drink_price = random.randint(5, 20)  # Generate a random price
-            self.db.banquet_drinks.create(banquet_id, drink_name, drink_price)
-            print(f"✅ Drink '{drink_name}' added with price {drink_price}.")
+        print("At least one drink must be assigned.\nType ## to terminate\n")
+        for i in range(0, total_drinks):
+            while True:
+                drink_name = self.db.input_drink_name(alcoholic_drinks, non_alcoholic_drinks)
+                if self.db.back(drink_name) or not drink_name:
+                    if i != 0:
+                        print("\n✅ Drinks added successfully")
+                        return True    #if drinks were added terminates correctly
+                    choice = None
+                    while choice != "no":
+                        choice = input("\nYou haven't added any drinks\nGoing back now will cause the deletion of the Banquet\nDo you want to proceed? [Yes/No]").lower()
+                        if choice == "yes":
+                            self.db.banquet.delete(banquet_id)
+                            return False
+                    continue
+                if self.db.banquet_drink.check_drink_exists(banquet_id, drink_name):
+                    print("\n❌ Drink already exists in the banquet. Please select a different drink.")
+                    continue
+                meal_price = self.get_valid_number(f"💵 Enter Price for '{drink_name}': ")
+                print(self.db.banquet_drink.create(banquet_id, drink_name, meal_price))
+                break
+        print("\n✅ Drinks added successfully")
+        return True
 
     # This method is called to validate the meal name entered by the admin
     def validate_meal_name(self, meal_name):
@@ -196,10 +221,10 @@ class AdminPage:
         banquet_name = self.db.input_banquet_name()
         if self.db.back(banquet_name):
             return True
-        banquet_date = self.get_valid_date(False)
+        banquet_date = self.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ", True)
         if self.db.back(banquet_date):
             return True
-        banquet_address = self.db.input_address()
+        banquet_address = self.db.input_address(False)
         if self.db.back(banquet_address):
             return True
         banquet_location = self.db.input_location(False)
@@ -425,6 +450,7 @@ Banquet {i}:
         print("\n🔍 Registration Status Report:")
         print(tabulate(data, headers="keys", tablefmt="pretty", showindex=False))
 
+        # remove total column otherwise will get displayed and histogram heights double
         data = data.drop("Total Seats", axis=1)
         # Visualization: Bar chart of registration status
         data.plot(kind='bar', x="Banquet Name", stacked=True, figsize=(10, 6),
@@ -520,6 +546,7 @@ Banquet {i}:
                 return datetime.strptime(date_input, "%Y-%m-%d").date()
             except ValueError:
                 print("\n❌ Invalid date format. Please use YYYY-MM-DD.")
+        return date_input
 
     def get_valid_time(self, prompt, allow_empty=False):
         time_input = None
@@ -532,6 +559,7 @@ Banquet {i}:
                 return time_input
             except ValueError:
                 print("\n❌ Invalid time format. Please use HH:MM:SS.")
+        return time_input
 
     def get_valid_number(self, prompt, allow_empty=False):
         number_input = None
@@ -542,6 +570,7 @@ Banquet {i}:
             if number_input.isdigit():
                 return int(number_input)
             print("\n❌ Please enter a valid number.")
+        return number_input
 
     def logout(self):
         self.userLogged = False

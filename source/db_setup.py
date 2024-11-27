@@ -190,11 +190,26 @@ class BanquetDatabase:
         return affiliate_organization
 
     def input_meal_name(self, available_meals):
-        meal_name = input("👉 Enter Meal Name: ").strip()
-        while not self.back(meal_name) and (meal_name not in available_meals and not self.back(meal_name)) :
-            print("❌ Invalid meal name. Beware of Caps. Please choose from the list below:")
+        available_meals = available_meals.split('\n')
+        all_meals = []
+        for meals in available_meals:
+            temp_meal = (meals[:-2].split(','))[0]
+            all_meals.append(temp_meal)
+
+        while True:
             meal_name = input("👉 Enter Meal Name: ").strip()
-        return meal_name
+            if self.back(meal_name):
+                return meal_name
+            if meal_name in all_meals:
+                    return meal_name
+            print("❌ Invalid meal name. Beware of Caps. Please choose from the list above:")
+
+    def input_drink_name(self, alcoholic, alcohol_free):
+        while True:
+            drink_name = input("👉 Enter Drink Name: ").strip()
+            if not drink_name or self.back(drink_name) or (drink_name in alcoholic) or (drink_name in alcohol_free):
+                return drink_name
+            print("❌ Invalid meal name. Beware of Caps. Please choose from the list above:")
 
     def input_alcoholic_drink(self):
         alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()

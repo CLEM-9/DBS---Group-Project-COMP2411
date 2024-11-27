@@ -1,5 +1,5 @@
 from mysql.connector import Error
-from pyexpat.errors import messages
+
 
 class Tables:
     def __init__(self, cursor, connection):
@@ -486,6 +486,16 @@ class BanquetDrink(Tables):
         except Error as e:
             return f"Could not read BanquetDrinks\nError code: {e}"
 
+    def check_drink_exists(self, BID, drinkName):
+        sql = "SELECT * FROM BanquetDrinks WHERE BID = %s AND drinkName = %s"
+        values = [BID, drinkName]
+        try:
+            self.cursor.execute(sql, values)
+            return self.cursor.fetchone() is not None
+        except Error as e:
+            print(f"Could not check if drink exists. Error: {e}")
+            return False
+
     def show_drinks(self, BID):
         sql = "SELECT drinkName, price FROM BanquetDrinks WHERE BID = %s"
         values = [BID]
@@ -515,9 +525,9 @@ class BanquetDrink(Tables):
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
-            return f"{BID, drinkName} deleted successfully."
+            return f"✅ Drink '{drinkName}' added successfully.\n"
         except Error as e:
-            return f"Could not delete Drink from Banquet\nError code: {e}"
+            return f"❌ Could not add {drinkName} in Banquet\nError code: {e}"
 
 
 class BanquetMeal(Tables):
@@ -531,9 +541,9 @@ class BanquetMeal(Tables):
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
-            return f"Meal '{mealName}' added successfully to Banquet ID {BID}."
+            return  f"✅ Drink '{mealName}' added successfully.\n"
         except Error as e:
-            return f"Could not create Meal in Banquet\nError code: {e}"
+            return f"❌ Could not add {mealName} in Banquet\nError code: {e}"
 
     def read(self):
         sql = "SELECT * FROM BanquetMeals"

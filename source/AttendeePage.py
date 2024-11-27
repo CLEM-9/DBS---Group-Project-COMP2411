@@ -1,7 +1,5 @@
 import datetime
-from dataclasses import field
 
-from db_setup import BanquetDatabase
 
 class AttendeePage:
     def __init__(self, cursor, connection, email, database):
