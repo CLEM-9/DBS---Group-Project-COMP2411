@@ -123,9 +123,9 @@ class BanquetDatabase:
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return re.match(pattern, email) is not None
 
-    def input_email(self):
+    def input_email(self, check_existence = True):
         email = input("📧 Enter Email: ").strip()
-        while not self.back(email) and self.check_email_exists(email):
+        while not self.back(email) and check_existence and self.check_email_exists(email):
             print("\n❌ This email is already registered. Please log in or use a different email to register. ❌\n")
             email = input("📧 Enter Email: ").strip()
         while not self.back(email) and not self.is_valid_email(email):

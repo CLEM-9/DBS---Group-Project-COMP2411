@@ -313,9 +313,7 @@ Banquet {i}:
         print("\n" + "=" * 50)
         print("🔍 Search for Attendees")
         print("=" * 50)
-        search_query = self.db.input_email()
-        if self.db.back(search_query):
-            return True
+        search_query = self.db.input_email(False)
         print("\nSearching attendees... 🔄")
         
         # Fetch attendee information
