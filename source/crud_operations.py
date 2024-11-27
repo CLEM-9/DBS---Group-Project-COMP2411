@@ -595,7 +595,7 @@ class UserBanquetRegistration(Tables):
         super().__init__(cursor, connection)
         self.table_name = "UserBanquetRegistration"
 
-    def create(self, BID= None, email=  None, mealName= None, alcoholicDrink= None, specialNeeds= None, seatingPref1= None, seatingPref2= None):
+    def create(self, BID, email, mealName, alcoholicDrink, specialNeeds, seatingPref1, seatingPref2):
         # SQL query to insert a new registration
         sql_insert = """
         INSERT INTO UserBanquetRegistration
@@ -618,7 +618,7 @@ class UserBanquetRegistration(Tables):
             )
             
             # Decrement the total seats, ensure no negative seats
-            affected_rows = self.cursor.execute(sql_update_seats, (BID,))
+            affected_rows = self.cursor.execute(sql_update_seats, [BID])
             if affected_rows == 0:
                 raise ValueError("No available seats left for this banquet.")
             

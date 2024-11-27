@@ -341,9 +341,18 @@ class BanquetDatabase:
         columns_placeholder = ", ".join(columns)
         placeholders = ", ".join(["%s"] * len(columns))
         insert_query = f"INSERT INTO {table_name}({columns_placeholder}) VALUES ({placeholders})"
+
+        sql_update_seats = """
+                UPDATE Banquet
+                SET totalSeats = totalSeats - 1
+                WHERE BID = %s AND totalSeats > 0
+                """
+
         for _, row in data.iterrows():
             values = tuple(row)
             try:
+                if table_name == "UserBanquetRegistration":
+                    self.cursor.execute(sql_update_seats, [values[0]])
                 self.cursor.execute(insert_query, values)
             except Error as e:
                 error_log_file.write(f"\tERROR inserting data into {table_name}: {e}\n\t\t{values}\n")
