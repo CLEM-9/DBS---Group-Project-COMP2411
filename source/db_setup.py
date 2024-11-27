@@ -145,45 +145,45 @@ class BanquetDatabase:
             password = input("🔒 Create Password: ").strip()
         return password
 
-    def input_name(self, word= "First", not_null = True):
+    def input_name(self, word= "First", empty_not_allowed = True):
         name = input(f"👤 Enter {word} Name: ").strip()
-        while not self.back(name) and (not_null and not name or not name.isalpha()):
+        while not self.back(name) and (empty_not_allowed and not name or not name.isalpha()):
             print(f"\n❌ {word} name is required and must only contain letters. Please try again. ❌\n")
             name = input(f"👤 Enter {word} Name: ").strip()
         return name
 
-    def input_phone(self, not_null = True):
+    def input_phone(self, empty_not_allowed = True):
         while True:
             phone = input("📞 Enter Phone Number: ").strip()
             if self.back(phone):
                 return phone
             if phone.isdigit() and len(phone) == 8:
                 return phone
-            if not (phone or not_null): # accepts empty entry
+            if not (phone or empty_not_allowed): # accepts empty entry
                 return phone
             print("\n❌ Phone number is invalid. Please enter a valid phone. ❌\n")
 
-    def input_address(self, not_null = True):
+    def input_address(self, empty_not_allowed = True):
         address = input("🏠 Enter Address: ").strip()
-        while not self.back(address) and (not_null and not address):
+        while not self.back(address) and (empty_not_allowed and not address):
             print("\n❌ Address cannot be empty. Please enter a valid address. ❌\n")
             address = input("🏠 Enter Address: ").strip()
         return address
 
-    def input_attendee_type(self, not_null = True):
+    def input_attendee_type(self, empty_not_allowed = True):
         while True:
             attendee_type = input("🎓 Enter Attendee Type (Student, Alumni, Staff, Guest): ").strip()
             if self.back(attendee_type):
                 return attendee_type
             if attendee_type in ["Student", "Alumni", "Staff", "Guest"]:
                 return attendee_type
-            if not (not_null or attendee_type): # accepts empty entry
+            if not (empty_not_allowed or attendee_type): # accepts empty entry
                 return attendee_type
             print("\n❌ Please select a valid attendee type: Student, Alumni, Staff, or Guest. ❌\n")
 
-    def input_affiliate_organization(self, not_null = True):
+    def input_affiliate_organization(self, empty_not_allowed = True):
         affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
-        while not self.back(affiliate_organization) and (not_null and not affiliate_organization):
+        while not self.back(affiliate_organization) and (empty_not_allowed and not affiliate_organization):
             print("\n❌ Organization name is required. Please provide a valid name. ❌\n")
             affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
         return affiliate_organization
@@ -210,16 +210,16 @@ class BanquetDatabase:
             seating_preference = input(f"👉 Enter Email of {word} preference (or press Enter to skip): ").strip()
         return seating_preference
 
-    def input_banquet_name(self, not_null= True):
+    def input_banquet_name(self, empty_not_allowed= True):
         banquet_name = input("🏷️ Enter Banquet Name: ").strip()
-        while not self.back(banquet_name) and (not_null and not banquet_name):
+        while not self.back(banquet_name) and (empty_not_allowed and not banquet_name):
             print("\n❌ Banquet Name cannot be empty. Please try again.")
             banquet_name = input("🏷️ Enter Banquet Name: ").strip()
         return banquet_name
 
-    def input_location(self, not_null= True):
+    def input_location(self, empty_not_allowed= True):
         banquet_location = input("📍 Enter Location: ").strip()
-        while not self.back(banquet_location) and (not_null and not banquet_location):
+        while not self.back(banquet_location) and (empty_not_allowed and not banquet_location):
             print("\n❌ Banquet Location cannot be empty.")
             banquet_location = input("📍 Enter Location: ").strip()
         return banquet_location
@@ -231,9 +231,9 @@ class BanquetDatabase:
             return True
         return False
 
-    def input_staff_email(self, not_null= True):
+    def input_staff_email(self, empty_not_allowed= True):
         staff_email = input("📧 Enter Staff Email: ")
-        while not self.back(staff_email) and (not_null or staff_email):
+        while not self.back(staff_email) and (empty_not_allowed or staff_email):
             if self.is_valid_email(staff_email):
                 if self.validate_staff(staff_email):
                     return staff_email

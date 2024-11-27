@@ -193,12 +193,15 @@ class AdminPage:
         print("=" * 50)
         print("Enter the details to search, or leave fields blank to skip.\n")
 
-        # TODO get verified info
         banquet_name = self.db.input_banquet_name()
         if self.db.back(banquet_name):
             return True
-        banquet_date = input("📅 Banquet Date (YYYY-MM-DD): ").strip()
-        banquet_address = input("🏠 Banquet Address: ").strip()
+        banquet_date = self.get_valid_date(False)
+        if self.db.back(banquet_date):
+            return True
+        banquet_address = self.db.input_address()
+        if self.db.back(banquet_address):
+            return True
         banquet_location = self.db.input_location(False)
         if self.db.back(banquet_location):
             return True
