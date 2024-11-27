@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS Banquet (
     banquetTime TIME NOT NULL,
     available ENUM('Yes', 'No'),
     totalSeats INT NOT NULL,
+    registeredUsers INT NOT NULL,
     FOREIGN KEY (staffEmail) REFERENCES Attendees(email)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,

@@ -45,6 +45,7 @@ class BanquetDatabase:
                 "  banquetTime TIME NOT NULL,"
                 "  available BIT,"
                 "  totalSeats INT NOT NULL,"
+                "  registeredUsers INT NOT NULL,"
                 "  FOREIGN KEY (staffEmail) REFERENCES Attendees(email)"
                 "    ON UPDATE CASCADE ON DELETE RESTRICT,"
                 "  CONSTRAINT unique_banquet UNIQUE (address, location, banquetDate)"
@@ -344,8 +345,8 @@ class BanquetDatabase:
 
         sql_update_seats = """
                 UPDATE Banquet
-                SET totalSeats = totalSeats - 1
-                WHERE BID = %s AND totalSeats > 0
+                SET registeredUsers = registeredUsers + 1
+                WHERE BID = %s AND registeredUsers < totalSeats
                 """
 
         for _, row in data.iterrows():

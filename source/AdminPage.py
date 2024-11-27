@@ -425,6 +425,7 @@ Banquet {i}:
         print("\n🔍 Registration Status Report:")
         print(tabulate(data, headers="keys", tablefmt="pretty", showindex=False))
 
+        data = data.drop("Total Seats", axis=1)
         # Visualization: Bar chart of registration status
         data.plot(kind='bar', x="Banquet Name", stacked=True, figsize=(10, 6),
                   title="Registration Status per Banquet")

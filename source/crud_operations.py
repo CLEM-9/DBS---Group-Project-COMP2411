@@ -179,10 +179,10 @@ class Banquet(Tables):
     # creates new banquet entry, banquetID is handled automatically by the database
     def create(self, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats):
         sql = """
-        INSERT INTO Banquet(banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO Banquet(banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats, registeredUsers)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        values = (banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats)
+        values = (banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats, 0)
         try:
             self.cursor.execute(sql, values)
             self.connection.commit()
@@ -605,10 +605,10 @@ class UserBanquetRegistration(Tables):
 
         # SQL query to decrement the available seats for the banquet
         sql_update_seats = """
-        UPDATE Banquet
-        SET totalSeats = totalSeats - 1
-        WHERE BID = %s AND totalSeats > 0
-        """
+                        UPDATE Banquet
+                        SET registeredUsers = registeredUsers + 1
+                        WHERE BID = %s AND registeredUsers < totalSeats
+                        """
 
         try:
             # Insert the registration
@@ -710,7 +710,13 @@ class UserBanquetRegistration(Tables):
     def delete(self, BID, email):
         sql = "DELETE FROM UserBanquetRegistration WHERE BID = %s AND email = %s"
         values = [BID, email]
+        sql_update_seats = """
+                        UPDATE Banquet
+                        SET registeredUsers = registeredUsers - 1
+                        WHERE BID = %s and registeredUsers > 0
+                        """
         try:
+            self.cursor.execute(sql_update_seats, [BID])
             self.cursor.execute(sql, values)
             self.connection.commit()
             return "User Registration deleted successfully."
@@ -800,10 +806,9 @@ class ReportGeneration(Tables):
         
     def get_registration_status(self):
         sql = """
-        SELECT b.banquetName, b.totalSeats, COUNT(r.email) AS registered, 
-               (b.totalSeats - COUNT(r.email)) AS available
+        SELECT b.banquetName, b.totalSeats, b.registeredUsers, 
+               (b.totalSeats - b.registeredUsers) AS available
         FROM Banquet b
-        LEFT JOIN UserBanquetRegistration r ON b.BID = r.BID
         GROUP BY b.BID
         """
         self.cursor.execute(sql)
