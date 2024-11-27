@@ -153,11 +153,15 @@ class BanquetDatabase:
         return name
 
     def input_phone(self, not_null = True):
-        phone = input("📞 Enter Phone Number: ").strip()
-        while not self.back(phone) and ((not_null and not phone) or (not phone.isdigit() or len(phone) != 8)):
-            print("\n❌ Phone number must be 8 digits and numeric. Please enter a valid number. ❌\n")
+        while True:
             phone = input("📞 Enter Phone Number: ").strip()
-        return phone
+            if self.back(phone):
+                return phone
+            if phone.isdigit() and len(phone) == 8:
+                return phone
+            if not (phone or not_null): # accepts empty entry
+                return phone
+            print("\n❌ Phone number is invalid. Please enter a valid phone. ❌\n")
 
     def input_address(self, not_null = True):
         address = input("🏠 Enter Address: ").strip()
@@ -167,11 +171,15 @@ class BanquetDatabase:
         return address
 
     def input_attendee_type(self, not_null = True):
-        attendee_type = input("🎓 Enter Attendee Type (Student, Alumni, Staff, Guest): ").strip()
-        while not self.back(attendee_type) and (not_null and attendee_type not in ["Student", "Alumni", "Staff", "Guest"]):
+        while True:
+            attendee_type = input("🎓 Enter Attendee Type (Student, Alumni, Staff, Guest): ").strip()
+            if self.back(attendee_type):
+                return attendee_type
+            if attendee_type in ["Student", "Alumni", "Staff", "Guest"]:
+                return attendee_type
+            if not (not_null or attendee_type): # accepts empty entry
+                return attendee_type
             print("\n❌ Please select a valid attendee type: Student, Alumni, Staff, or Guest. ❌\n")
-            attendee_type = input("🎓 Enter Attendee Type: ").strip()
-        return attendee_type
 
     def input_affiliate_organization(self, not_null = True):
         affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
@@ -219,13 +227,13 @@ class BanquetDatabase:
     def validate_staff(self, staff_email):
         self.cursor.execute("SELECT attendeeType FROM Attendees WHERE email = %s", [staff_email])
         is_staff = self.cursor.fetchone()
-        if is_staff[0] == "Staff":
+        if is_staff and (is_staff[0] == "Staff"):
             return True
         return False
 
-    def input_staff_email(self):
+    def input_staff_email(self, not_null= True):
         staff_email = input("📧 Enter Staff Email: ")
-        while not self.back(staff_email):
+        while not self.back(staff_email) and (not_null or staff_email):
             if self.is_valid_email(staff_email):
                 if self.validate_staff(staff_email):
                     return staff_email
@@ -253,18 +261,23 @@ class BanquetDatabase:
         pass
 
     def create_tables_load_testing_data(self):
+        error_log_path = os.path.join(os.path.dirname(__file__), f"../resources/error_log.txt")
+        os.remove(error_log_path)
+        error_log_file = open(error_log_path, "w")
+
         self.check_connection()
         print("\nPlease wait, populating database with test data...")
         try:
             for table_name, table_sql in self.TABLES.items():
                 self.cursor.execute(table_sql)
-                self.insert_data_from_excel(table_name)
+                error_log_file.write(f"ATTEMPT LOADING FROM {table_name}\n\n")
+                self.insert_data_from_excel(table_name, error_log_file)
             print("\n✅ Testing data loaded successfully")
-            # insert_test_data()
         except Error as err:
             print(f"Failed populating tables:\nError Code: {err}")
         finally:
             self.connection.commit()
+            error_log_file.close()
 
     def setup_database(self):
         self.create_database()
@@ -320,7 +333,7 @@ class BanquetDatabase:
         except Error as err:
             print(f"Failed dropping database:\nError Code: {err}")
 
-    def insert_data_from_excel(self, table_name):
+    def insert_data_from_excel(self, table_name, error_log_file):
         file_path = os.path.join(os.path.dirname(__file__), f"../database/test_data_tables/{table_name}.xlsx")
         data = pd.read_excel(file_path)
         data = data.replace({np.nan: None})
@@ -333,9 +346,9 @@ class BanquetDatabase:
             try:
                 self.cursor.execute(insert_query, values)
             except Error as e:
-                print(f"❌ Error inserting data into {table_name}: {e}\n{values}")
+                error_log_file.write(f"\tERROR inserting data into {table_name}: {e}\n\t\t{values}\n")
             except Exception as ex:
-                print(f"❌ General error: {ex}\n{values}")
+                error_log_file.write(f"\tERROR General error: {ex}\n\t\t{values}\n")
         self.connection.commit()
         print(f"✅ Data from '{table_name}.xlsx' inserted successfully into '{table_name}'.")
 

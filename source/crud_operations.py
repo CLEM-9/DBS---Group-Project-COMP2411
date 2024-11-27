@@ -71,7 +71,7 @@ class Attendees(Tables):
     def update(self, emailID, email= None, password= None, phone= None, firstName= None, lastName= None, address= None, attendeeType= None, affiliateOrganization= None):
         sql = "UPDATE Attendees SET "
         values = []
-        message = "Following fields are updated:\n"
+        message = "Following fields are successfully updated:\n"
 
                 # Update fields dynamically
         if email:
@@ -132,7 +132,7 @@ class Attendees(Tables):
                     affiliateOrganization=affiliateOrganization)
 
     def admin_update_attendee_info(self, emailID, phone= None, address= None, attendee_type= None, organization= None):
-        self.update(emailID, phone=phone, address=address, attendeeType=attendee_type,
+        return self.update(emailID, phone=phone, address=address, attendeeType=attendee_type,
                     affiliateOrganization=organization)
 
     # deletes user with the primary key "email"
@@ -580,7 +580,7 @@ class BanquetMeal(Tables):
             return f"Could not update Meal in Banquet\nError code: {e}"
 
     def delete(self, BID):
-        sql = "DELETE FROM BanquetDrinks WHERE BID = %s"
+        sql = "DELETE FROM BanquetMeals WHERE BID = %s"
         values = [BID]
         try:
             self.cursor.execute(sql, values)
