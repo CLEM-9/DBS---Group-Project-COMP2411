@@ -278,7 +278,7 @@ class BanquetDatabase:
 
     def create_tables_load_testing_data(self):
         error_log_path = os.path.join(os.path.dirname(__file__), f"../resources/error_log.txt")
-        os.remove(error_log_path)
+        #os.remove(error_log_path)
         error_log_file = open(error_log_path, "w")
 
         self.check_connection()

@@ -27,8 +27,8 @@ class AdminPage:
             print("4️⃣  Delete Banquet")
             print("5️⃣  Search for Attendees")
             print("6️⃣  Edit Attendee Information")
-            print("7    Generate Reports")
-            print("8    Logout")
+            print("7️⃣  Generate Reports")
+            print("8️⃣  Logout")
             print("=" * 50)
 
             choice = input("👉 Enter your choice (1-8): ").strip()
