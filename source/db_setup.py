@@ -1,3 +1,5 @@
+
+
 from crud_operations import *
 import numpy as np
 from mysql.connector import Error
@@ -277,9 +279,13 @@ class BanquetDatabase:
         pass
 
     def create_tables_load_testing_data(self):
-        error_log_path = os.path.join(os.path.dirname(__file__), f"../resources/error_log.txt")
-        os.remove(error_log_path)
+        error_log_path = os.path.join(os.path.dirname(__file__), "../resources/error_log.txt")
         error_log_file = open(error_log_path, "w")
+
+        sql_file_path = os.path.join(os.path.dirname(__file__), "../database/insert_query.sql")
+        sql_file = None
+        if not os.path.exists(sql_file_path):
+            sql_file = open(sql_file_path, "w")
 
         self.check_connection()
         print("\nPlease wait, populating database with test data...")
@@ -288,12 +294,16 @@ class BanquetDatabase:
                 self.cursor.execute(table_sql)
                 error_log_file.write(f"ATTEMPT LOADING FROM {table_name}\n\n")
                 self.insert_data_from_excel(table_name, error_log_file)
+                if sql_file:
+                    self.create_sql_insert_file(table_name, sql_file)
             print("\n✅ Testing data loaded successfully")
         except Error as err:
             print(f"Failed populating tables:\nError Code: {err}")
         finally:
             self.connection.commit()
             error_log_file.close()
+            if sql_file:
+                sql_file.close()
 
     def setup_database(self):
         self.create_database()
@@ -349,6 +359,45 @@ class BanquetDatabase:
         except Error as err:
             print(f"Failed dropping database:\nError Code: {err}")
 
+    @staticmethod
+    def create_sql_insert_file(table_name, sql_file):
+        file_path = os.path.join(os.path.dirname(__file__), f"../database/test_data_tables/{table_name}.xlsx")
+        data = pd.read_excel(file_path)
+        data = data.replace({np.nan: None})
+        columns = data.columns.tolist()
+        columns_placeholder = ", ".join(columns)
+
+        sql_statement_query = f"INSERT INTO {table_name}({columns_placeholder})\nVALUES"
+
+        # Builds the sql statement from the excell file
+        sql_file.write("-------------------------------------\n")
+        sql_file.write(f"-- REMEMBER TO CHANGE None TO NULL --\n")
+        sql_file.write("-------------------------------------\n\n")
+        sql_file.write(f"-- {table_name} INSERT STATEMENT\n")
+        sql_file.write(sql_statement_query)
+
+        firstLine = 0
+        for _, row in data.iterrows():
+            sql_values = list(row)
+            if table_name == "Banquet":
+                hour = sql_values[6].hour
+                minute = sql_values[6].minute
+                second = sql_values[6].second
+                if not hour:
+                    hour = "00"
+                if not minute:
+                    minute = "00"
+                if not second:
+                    second = "00"
+                sql_values[6] = f'{hour}:{minute}:{second}'
+            sql_values = tuple(sql_values)
+            if firstLine:
+                sql_file.write(f",\n\t{sql_values}")
+            else:
+                sql_file.write(f"\n\t{sql_values}")
+            firstLine += 1
+        sql_file.write(";\n\n\n")
+
     def insert_data_from_excel(self, table_name, error_log_file):
         file_path = os.path.join(os.path.dirname(__file__), f"../database/test_data_tables/{table_name}.xlsx")
         data = pd.read_excel(file_path)
@@ -356,6 +405,7 @@ class BanquetDatabase:
         columns = data.columns.tolist()
         columns_placeholder = ", ".join(columns)
         placeholders = ", ".join(["%s"] * len(columns))
+
         insert_query = f"INSERT INTO {table_name}({columns_placeholder}) VALUES ({placeholders})"
 
         sql_update_seats = """
@@ -368,7 +418,7 @@ class BanquetDatabase:
             values = tuple(row)
             try:
                 if table_name == "UserBanquetRegistration":
-                    self.cursor.execute(sql_update_seats, [values[0]])
+                    self.cursor.execute(sql_update_seats, [values[0]])  # when inserting the banquets registrations also updates the count
                 self.cursor.execute(insert_query, values)
             except Error as e:
                 error_log_file.write(f"\tERROR inserting data into {table_name}: {e}\n\t\t{values}\n")
