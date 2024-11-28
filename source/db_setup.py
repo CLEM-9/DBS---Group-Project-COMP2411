@@ -1,5 +1,3 @@
-
-
 from crud_operations import *
 import numpy as np
 from mysql.connector import Error
