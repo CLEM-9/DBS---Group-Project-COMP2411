@@ -115,16 +115,17 @@ class AdminPage:
         print("✅ Banquet created successfully")
         return True
 
-    # This method is called when the admin wants to add meals to a banquet
     def add_meals_to_banquet(self, banquet_id):
         print("\n" + "=" * 50)
         print("🍽️ Add Meals to Banquet")
         print("=" * 50)
-
-        available_meals = self.db.meal.read()
-        available_meals = available_meals.split('\n')
+        available_meals = self.db.meal.read().split('\n')
+        meal_names = [meal.split(',')[0].strip() for meal in available_meals]
         print("\nAvailable Meals:\n")
-        print(available_meals)
+        items_per_row = 3
+        for i in range(0, len(meal_names), items_per_row):
+            print(" | ".join(meal_names[i:i + items_per_row]))
+        print("\n" + "=" * 50)
 
         print("\nYou must assign four meals to the banquet.")
         for i in range(1, 5):
@@ -150,26 +151,31 @@ class AdminPage:
         non_alcoholic_drinks = []
 
         for drink in available_drinks:
-            drink = drink[:-2].split(',')
-            isAlcoholic = int(drink[1])
-            if isAlcoholic:
-                alcoholic_drinks.append(drink[0])
+            drink_details = drink[:-2].split(',') 
+            is_alcoholic = int(drink_details[1])  
+            drink_name = drink_details[0].strip()  
+            if is_alcoholic:
+                alcoholic_drinks.append(drink_name)
             else:
-                non_alcoholic_drinks.append(drink[0])
-
-        total_drinks = len(alcoholic_drinks) + len(non_alcoholic_drinks)
-
-        if not (alcoholic_drinks and non_alcoholic_drinks):
+                non_alcoholic_drinks.append(drink_name)
+      
+        if not alcoholic_drinks or not non_alcoholic_drinks:
             print("\n❌ Unable to add drinks. Make sure the drink table has both alcoholic and non-alcoholic options.")
             return False
 
+        print("\n" + "=" * 50)
+        print("🍹 Drinks for the Banquet")
+        print("=" * 50)
         print("\nAlcoholic Drinks:")
-        print("".join(f"\t{drink}\n" for drink in alcoholic_drinks))
-        print("\nAlcohol FREE Drinks:")
-        print("".join(f"\t{drink}\n" for drink in non_alcoholic_drinks))
+        for drink in alcoholic_drinks:
+            print(f"  - {drink}")
+        print("\nAlcohol-Free Drinks:")
+        for drink in non_alcoholic_drinks:
+            print(f"  - {drink}")
 
-        print("At least one drink must be assigned.\n")
-        for i in range(0, total_drinks):
+        print("\n" + "=" * 50)
+        print("At least one drink must be assigned, at most you can assign four drinks.\n")
+        for i in range(0, 4):
             while True:
                 drink_name = self.db.input_drink_name(alcoholic_drinks, non_alcoholic_drinks)
                 if self.db.back(drink_name) or not drink_name:

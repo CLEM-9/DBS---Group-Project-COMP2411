@@ -221,11 +221,12 @@ class BanquetDatabase:
                 return affiliate_organization
             print("❌ Organization name is required. Please provide a valid name. ❌\n")
 
-    def input_meal_name(self, available_meals, empty_not_allowed = True):
+    def input_meal_name(self, available_meals, empty_not_allowed=True):
         all_meals = []
-        for meals in available_meals:
-            meals = list(meals)  #transforms into a list the in case it's a tuple
-            all_meals.append(meals[0])
+        for meal in available_meals:
+            # Extract the first part of each meal description before the first comma
+            first_meal = meal.split(',')[0].strip()
+            all_meals.append(first_meal)
 
         while True:
             meal_name = input("👉 Enter Meal Name: ").strip()
@@ -234,7 +235,7 @@ class BanquetDatabase:
             if self.back(meal_name):
                 return meal_name
             if meal_name in all_meals:
-                    return meal_name
+                return meal_name
             print("❌ Invalid meal name. Beware of Caps. Please choose from the list above: ❌\n")
 
     def input_drink_name(self, alcoholic, alcohol_free):
@@ -288,6 +289,9 @@ class BanquetDatabase:
             if banquet_location and self.is_alphanumeric(banquet_location):
                 return banquet_location
             print("❌ Banquet Location is required. Please enter a valid Location ❌\n")
+
+    def is_alphanumeric(self, text):
+        return all(char.isalnum() or char.isspace() for char in text)
 
     def validate_staff(self, staff_email):
         self.cursor.execute("SELECT attendeeType FROM Attendees WHERE email = %s", [staff_email])
