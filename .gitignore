@@ -1,6 +1,5 @@
 __pycache__/
 *.pyc
-/database/test_data_tables/errors in loading.txt
 /resources/error_log.txt
 /resources/logic tables.xlsx
 /source/db_connection.py
