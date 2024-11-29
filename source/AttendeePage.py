@@ -1,5 +1,9 @@
 import datetime
 
+def print_user_tips():
+    print("\n" + "=" * 54)
+    print("🚪 Press: 'Enter' to leave information fields empty")
+    print("🚪 Type:  '##'    to quit any operation")
 
 class AttendeePage:
     def __init__(self, cursor, connection, email, database):
@@ -11,15 +15,16 @@ class AttendeePage:
 
     def display(self):
         while self.userLogged:
-            print("\n" + "=" * 50)
+            print_user_tips()
+            print("=" * 54)
             print(f"👤 Welcome to Your Dashboard ({self.email})")
-            print("=" * 50)
+            print("=" * 54)
             print("1️⃣  Search for a Banquet")
             print("2️⃣  Register for a Banquet")
             print("3️⃣  Update Account Information")
             print("4️⃣  View Registered Banquets")
             print("5️⃣  Logout")
-            print("=" * 50)
+            print("=" * 54)
 
             choice = input("👉 Enter your choice (1-5): ").strip()
 
@@ -45,24 +50,25 @@ class AttendeePage:
             elif choice == '5':
                 self.logout()
             else:
-                print("\n❌ Invalid choice. Please try again. ❌")
+                print("❌ Invalid choice. Please try again. ❌\n")
         return True
 
     def update_account_info(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 54)
         print("✏️ Update Your Account Information")
-        print("=" * 50)
+        print("=" * 54)
         print("Leave fields blank to keep them unchanged.")
 
         # false parameter means the input can be null
-        email = self.db.input_email() or self.email
-        password = self.db.input_password() or None
-        first_name = self.db.input_name("First", False) or None
-        last_name = self.db.input_name("Last", False) or None
-        phone = self.db.input_phone(False) or None
-        address = self.db.input_address(False) or None
-        attendee_type = self.db.input_attendee_type(False) or None
-        affiliate_organization = self.db.input_affiliate_organization(False) or None
+        email = self.db.input_email(empty_not_allowed= False) or self.email
+        password = self.db.input_password(empty_not_allowed= False) or None
+        first_name = self.db.input_name("First", empty_not_allowed= False) or None
+        last_name = self.db.input_name("Last", empty_not_allowed= False) or None
+        phone = self.db.input_phone(empty_not_allowed= False) or None
+        address = self.db.input_address(empty_not_allowed= False) or None
+        attendee_type = self.db.input_attendee_type(empty_not_allowed= False) or None
+        affiliate_organization = self.db.input_affiliate_organization(empty_not_allowed= False) or None
         
         result = self.db.attendees.update(self.email, email, password, phone, first_name, last_name, address,
                                        attendee_type, affiliate_organization)
@@ -70,9 +76,10 @@ class AttendeePage:
         return True
 
     def search_banquet(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 54)
         print("🔍 Search for a Banquet")
-        print("=" * 50)
+        print("=" * 54)
         print("Enter the details to filter, or leave fields blank to skip.\n")
         print("📝 Note down the Banquet ID which you want to register.")
 
@@ -91,8 +98,8 @@ class AttendeePage:
         if result:
             print("\n✅ Search Results:\n")
             for i, banquet in enumerate(result, start=1):
-                banquet_date_time = f"{banquet[4]} at {banquet[5]}"
-                available = "Yes" if banquet[6] else "No"
+                banquet_date_time = f"{banquet[5]} at {banquet[6]}"
+                available = "Yes" if int(banquet[7]) else "No"
                 print(f"""
 Banquet {i}:
     🆔 BID: {banquet[0]}
@@ -101,17 +108,17 @@ Banquet {i}:
     📍 Location: {banquet[3]}
     📅 Date & Time: {banquet_date_time}
     🟢 Available: {available}
-    🪑 Total Seats: {banquet[7]}
+    🪑 Total Seats: {banquet[8]}
     """)
         else:
             print("\n❌ No banquets found matching the criteria.")
         return True # takes back to main selection
 
     def register_for_banquet(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 54)
         print("📝 Register for a Banquet")
-        print("=" * 50)
-        print("## to quit anytime\n")
+        print("=" * 54)
 
         banquet_id = input("🆔 Enter Banquet ID: ").strip()
         while not banquet_id:
@@ -149,8 +156,7 @@ Banquet {i}:
         print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in banquet_meals]))
 
         # Extract only the meal names for validation
-        available_meals = [meal[0] for meal in banquet_meals]
-        meal_name = self.db.input_meal_name(available_meals)
+        meal_name = self.db.input_meal_name(banquet_meals)
         if self.db.back(meal_name):
             return True
 
@@ -197,9 +203,10 @@ Banquet {i}:
             return "Invalid Date/Time"
 
     def search_registered_banquets(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 54)
         print("📋 Registered Banquets")
-        print("=" * 50)
+        print("=" * 54)
         
         registered_banquets = self.db.user_banquet_registration.read_by_user(self.email)
         if not registered_banquets.strip():
@@ -214,7 +221,7 @@ Banquet {i}:
                 banquet_details = self.db.banquet.read_by_id(BID)
                 if banquet_details:
                     banquet_date_time = self.format_datetime(banquet_details[4], banquet_details[5])
-                    isAlcoholic = "Yes" if fields[3] else "No"
+                    isAlcoholic = "Yes" if int(fields[3]) else "No"
                     print(f"""
 Banquet {i}:
     🆔 BID: {BID}
@@ -237,10 +244,13 @@ Banquet {i}:
         return True
 
     def delete_edit_registration(self):
+        print_user_tips()
+        print("=" * 54)
         print("1️⃣  Delete a Registration")
         print("2️⃣  Edit your Registration")
         print("3️⃣  Go back to Dashboard")
-        choice = input("\n👉 Enter your choice (1/2/3): ").strip()
+        print("=" * 54 + "\n")
+        choice = input("👉 Enter your choice (1/2/3): ").strip()
 
         successful_operation = False
         if choice == '1':
@@ -276,9 +286,10 @@ Banquet {i}:
         return True
 
     def edit_registration(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 54)
         print("✏️ Edit your Registration")
-        print("=" * 50)
+        print("=" * 54)
         print("Enter the details to update, or press enter to skip but you have to provide a Banquet ID\n")
         BID = input("🆔 Enter Banquet ID: ").strip()
         if not BID:
@@ -289,21 +300,27 @@ Banquet {i}:
             return False
 
         meals = self.db.banquet_meal.show_meals(BID)  # Fetch meals for the banquet
-
-        if meals:
-            # Display available meals in a formatted manner
-            print("\n🍽️  Banquet Meals:")
-            print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in meals]))
-        else:
-            print("❌ No meals found for this banquet.")
+        if not meals:
+            print("❌ No meals found for this banquet.\n")
+            return  True    # Exit if no meals are available
+        drinks = self.db.banquet_drink.show_drinks(BID)
+        if not drinks:
+            print("❌ No drinks found for this banquet.\n")
             return  True    # Exit if no meals are available
 
-        available_meals = [meal[0] for meal in meals]
-        meal_name = self.db.input_meal_name(available_meals) #false means can be null
+        # Display available meals in a formatted manner
+        print("\n🍽️  Banquet Meals:")
+        print("\n".join([f"\t\t{meal[0]}, ${meal[1]:.2f}" for meal in meals]) + "\n")
+
+        meal_name = self.db.input_meal_name(meals, False) #false means can be null
         if self.db.back(meal_name):
             return True
 
-        alcoholic_drink = self.db.input_alcoholic_drink()
+        # Display available drinks in a formatted manner
+        print("\n🍽️  Banquet Drinks:")
+        print("\n".join([f"\t\t{drink[0]}, ${drink[1]:.2f}" for drink in drinks]) + "\n")
+
+        alcoholic_drink = self.db.input_alcoholic_drink(empty_not_allowed=False)
         if self.db.back(alcoholic_drink):
             return True
         alcoholic_drink = (alcoholic_drink == "yes")
@@ -328,8 +345,8 @@ Banquet {i}:
 
 
     def logout(self):
-        print("\n" + "=" * 50)
+        print("=" * 54)
         print("👋 Logging out... Goodbye!")
-        print("=" * 50)
+        print("=" * 54)
         self.userLogged = False
         return True

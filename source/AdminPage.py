@@ -58,7 +58,7 @@ class AdminPage:
                 self.logout()
                 return True
             else:
-                print("\n❌ Invalid choice. Please try again. ❌")
+                print("❌ Invalid choice. Please try again. ❌\n")
         return True
 
     # This method is called when the admin wants to create a new banquet
@@ -118,6 +118,7 @@ class AdminPage:
         print("=" * 50)
 
         available_meals = self.db.meal.read()
+        available_meals = available_meals.split('\n')
         print("\nAvailable Meals:\n")
         print(available_meals)
 
@@ -218,7 +219,7 @@ class AdminPage:
         print("=" * 50)
         print("Enter the details to search, or leave fields blank to skip.\n")
 
-        banquet_name = self.db.input_banquet_name()
+        banquet_name = self.db.input_banquet_name(False)
         if self.db.back(banquet_name):
             return True
         banquet_date = self.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ", True)
@@ -231,13 +232,16 @@ class AdminPage:
         if self.db.back(banquet_location):
             return True
 
+        if not (banquet_name and banquet_date and banquet_address and banquet_location):
+            print("\nAll fields are empty. All banquets will be displayed\n")
+
         print("\nSearching for banquets... 🔄")
         result = self.db.banquet.read_by_filter( banquet_name, banquet_date, banquet_location, banquet_address)
         if result:
             print("\n✅ Search Results:\n")
             for i, banquet in enumerate(result, start=1):
                 banquet_date_time = f"{banquet[4]} at {banquet[5]}"
-                available = "Yes" if banquet[6] else "No"
+                available = "Yes" if int(banquet[6]) else "No"
                 print(f"""
 Banquet {i}:
     🆔 BID: {banquet[0]}

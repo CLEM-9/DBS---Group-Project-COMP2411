@@ -124,121 +124,160 @@ class BanquetDatabase:
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return re.match(pattern, email) is not None
 
-    def input_email(self, check_existence = True):
-        email = input("📧 Enter Email: ").strip()
-        while not self.back(email) and check_existence and self.check_email_exists(email):
-            print("\n❌ This email is already registered. Please log in or use a different email to register. ❌\n")
-            email = input("📧 Enter Email: ").strip()
-        while not self.back(email) and not self.is_valid_email(email):
-            print("\n❌ Invalid email format. Please enter a valid email. ❌\n")
-            email = input("📧 Enter Email: ").strip()
-        return email
-
     @staticmethod
-    def input_password():
-        #TODO switch to getpass on delivery
-        #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
-        password = input("🔒 Enter Password: ").strip()
-        while not password:
-            print("\n❌ Password is required. Please provide a secure password. ❌\n")
+    def is_alphanumeric(string):
+        # Use a regular expression to check if the string contains only a-z, A-Z, and 0-9
+        return bool(re.fullmatch(r'[a-zA-Z0-9]+', string))
+
+    def input_email(self, check_existence = True, empty_not_allowed = True):
+        while True:
+            email = input("📧 Enter Email: ").strip()
+            if not (empty_not_allowed or email):
+                return None
+            if self.back(email):    #if back, go back
+                return email
+            if self.is_valid_email(email):
+                if check_existence:
+                    if self.check_email_exists(email):
+                        return email
+                    else:
+                        print("❌ This email is already registered. Please log in or use a different email to register. ❌\n")
+                else:
+                    return email
+            else:
+                print("❌ Invalid email format. Please enter a valid email. ❌\n")
+
+    def input_password(self, empty_not_allowed = True):
+        while True:
             #TODO switch to getpass on delivery
-            #password = getpass("🔒 Create Password: ").strip()
-            password = input("🔒 Create Password: ").strip()
-        return password
+            #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
+            password = input("🔒 Enter Password: ").strip()
+            if self.back(password):
+                return password
+            if not empty_not_allowed or password:
+                if not password:
+                    return None
+                return password
+            print("❌ Password is required. Please provide a secure password. ❌\n")
 
     def input_name(self, word= "First", empty_not_allowed = True):
-        name = input(f"👤 Enter {word} Name: ").strip()
-        while not self.back(name) and (empty_not_allowed and not name or not name.isalpha()):
-            print(f"\n❌ {word} name is required and must only contain letters. Please try again. ❌\n")
+        while True:
             name = input(f"👤 Enter {word} Name: ").strip()
-        return name
+            if not (empty_not_allowed or name): # accepts only empty entry
+                return None
+            if self.back(name):
+                return name
+            if name and name.isalpha():
+                return name
+            print(f"❌ {word} name is required and must only contain letters. Please try again. ❌\n")
 
     def input_phone(self, empty_not_allowed = True):
         while True:
             phone = input("📞 Enter Phone Number: ").strip()
+            if not (empty_not_allowed or phone): # accepts only empty entry
+                return None
             if self.back(phone):
                 return phone
-            if phone.isdigit() and len(phone) == 8:
+            if phone and phone.isdigit() and len(phone) == 8:
                 return phone
-            if not (phone or empty_not_allowed): # accepts empty entry
-                return phone
-            print("\n❌ Phone number is invalid. Please enter a valid phone. ❌\n")
+            print("❌ Phone number is invalid. Please enter a valid phone. ❌\n")
 
     def input_address(self, empty_not_allowed = True):
-        address = input("🏠 Enter Address: ").strip()
-        while not self.back(address) and (empty_not_allowed and not address):
-            print("\n❌ Address cannot be empty. Please enter a valid address. ❌\n")
+        while True:
             address = input("🏠 Enter Address: ").strip()
-        return address
+            if not (empty_not_allowed or address):  # passes only empty string if allowed
+                return None
+            if self.back(address):
+                return address
+            if address and self.is_valid_email(address):
+                return address
+            print("❌ Address is invalid. Please enter a valid address. ❌\n")
 
     def input_attendee_type(self, empty_not_allowed = True):
         while True:
             attendee_type = input("🎓 Enter Attendee Type (Student, Alumni, Staff, Guest): ").strip()
+            if not (empty_not_allowed or attendee_type): # accepts only empty entry
+                return None
             if self.back(attendee_type):
                 return attendee_type
             if attendee_type in ["Student", "Alumni", "Staff", "Guest"]:
                 return attendee_type
-            if not (empty_not_allowed or attendee_type): # accepts empty entry
-                return attendee_type
-            print("\n❌ Please select a valid attendee type: Student, Alumni, Staff, or Guest. ❌\n")
+            print("❌ Please select a valid attendee type: Student, Alumni, Staff, or Guest. ❌\n")
 
     def input_affiliate_organization(self, empty_not_allowed = True):
-        affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
-        while not self.back(affiliate_organization) and (empty_not_allowed and not affiliate_organization):
-            print("\n❌ Organization name is required. Please provide a valid name. ❌\n")
+        while True:
             affiliate_organization = input("🏢 Enter Affiliate Organization: ").strip()
-        return affiliate_organization
+            if not (empty_not_allowed or affiliate_organization):
+                return None
+            if self.back(affiliate_organization):
+                return affiliate_organization
+            if affiliate_organization and self.is_alphanumeric(affiliate_organization):
+                return affiliate_organization
+            print("❌ Organization name is required. Please provide a valid name. ❌\n")
 
-    def input_meal_name(self, available_meals):
-        available_meals = available_meals.split('\n')
+    def input_meal_name(self, available_meals, empty_not_allowed = True):
         all_meals = []
         for meals in available_meals:
-            temp_meal = (meals[:-2].split(','))[0]
-            all_meals.append(temp_meal)
+            meals = list(meals)  #transforms into a list the in case it's a tuple
+            all_meals.append(meals[0])
 
         while True:
             meal_name = input("👉 Enter Meal Name: ").strip()
+            if not (empty_not_allowed or meal_name):
+                return None
             if self.back(meal_name):
                 return meal_name
             if meal_name in all_meals:
                     return meal_name
-            print("❌ Invalid meal name. Beware of Caps. Please choose from the list above:")
+            print("❌ Invalid meal name. Beware of Caps. Please choose from the list above: ❌\n")
 
     def input_drink_name(self, alcoholic, alcohol_free):
         while True:
             drink_name = input("👉 Enter Drink Name: ").strip()
             if not drink_name or self.back(drink_name) or (drink_name in alcoholic) or (drink_name in alcohol_free):
                 return drink_name
-            print("❌ Invalid meal name. Beware of Caps. Please choose from the list above:")
+            print("❌ Invalid drink name. Beware of Caps. Please choose from the list above: ❌\n")
 
     def input_alcoholic_drink(self):
         alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
         while alcoholic_drink not in ["yes", "no"] and not self.back(alcoholic_drink):
-            print("❌ Invalid choice. Please enter 'Yes' or 'No'.")
+            print("❌ Invalid choice. Please enter 'Yes' or 'No' ❌\n")
             alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
         return alcoholic_drink
 
     def input_seating_preference(self, word = "first"):
-        seating_preference = input(f"👉 Enter Email of {word} preference (or press Enter to skip): ").strip()
         # Validate seating preferences
-        while not self.back(seating_preference) and seating_preference and not self.is_valid_email(seating_preference):
-            print("❌ Email address is invalid. Please try again.")
+        while True:
             seating_preference = input(f"👉 Enter Email of {word} preference (or press Enter to skip): ").strip()
-        return seating_preference
+            if not seating_preference:
+                return None
+            if self.back(seating_preference):
+                return seating_preference
+            if self.is_valid_email(seating_preference):
+                return seating_preference
+            print("❌ Email address is invalid. Please try again ❌\n")
 
     def input_banquet_name(self, empty_not_allowed= True):
-        banquet_name = input("🏷️ Enter Banquet Name: ").strip()
-        while not self.back(banquet_name) and (empty_not_allowed and not banquet_name):
-            print("\n❌ Banquet Name cannot be empty. Please try again.")
+        while True:
             banquet_name = input("🏷️ Enter Banquet Name: ").strip()
-        return banquet_name
+            if not (empty_not_allowed or banquet_name):
+                return None
+            if self.back(banquet_name):
+                return banquet_name
+            if banquet_name and self.is_alphanumeric(banquet_name):
+                return banquet_name
+            print("❌ Banquet Name is required. Please enter a valid Name. ❌\n")
 
     def input_location(self, empty_not_allowed= True):
-        banquet_location = input("📍 Enter Location: ").strip()
-        while not self.back(banquet_location) and (empty_not_allowed and not banquet_location):
-            print("\n❌ Banquet Location cannot be empty.")
+        while True:
             banquet_location = input("📍 Enter Location: ").strip()
-        return banquet_location
+            if not (empty_not_allowed or banquet_location):
+                return None
+            if self.back(banquet_location):
+                return banquet_location
+            if banquet_location and self.is_alphanumeric(banquet_location):
+                return banquet_location
+            print("❌ Banquet Location is required. Please enter a valid Location ❌\n")
 
     def validate_staff(self, staff_email):
         self.cursor.execute("SELECT attendeeType FROM Attendees WHERE email = %s", [staff_email])
@@ -248,17 +287,15 @@ class BanquetDatabase:
         return False
 
     def input_staff_email(self, empty_not_allowed= True):
-        staff_email = input("📧 Enter Staff Email: ")
-        while not self.back(staff_email) and (empty_not_allowed or staff_email):
-            if self.is_valid_email(staff_email):
-                if self.validate_staff(staff_email):
-                    return staff_email
-                else:
-                    print("\n❌ Email does not belong to staff. Please input staff email")
-            else:
-                print("\n❌ Email format is incorrect. Please try again")
+        while True:
             staff_email = input("📧 Enter Staff Email: ")
-        return staff_email
+            if not (empty_not_allowed or staff_email):
+                return None
+            if self.back(staff_email):
+                return staff_email
+            if staff_email and self.is_valid_email(staff_email):
+                return staff_email
+            print("❌ Staff Email is required. Please enter a valid email ❌\n")
 
     def check_connection(self):
         if self.connection is None:
@@ -294,9 +331,9 @@ class BanquetDatabase:
                 self.insert_data_from_excel(table_name, error_log_file)
                 if sql_file:
                     self.create_sql_insert_file(table_name, sql_file)
-            print("\n✅ Testing data loaded successfully")
+            print("✅ Testing data loaded successfully \n")
         except Error as err:
-            print(f"Failed populating tables:\nError Code: {err}")
+            print(f"❌ Failed populating tables: ❌\nError Code: {err}\n")
         finally:
             self.connection.commit()
             error_log_file.close()
@@ -321,16 +358,14 @@ class BanquetDatabase:
             )
             if_admin = self.cursor.fetchone()
             if if_attendee:
-                print("Login successful!")
                 return ["Attendee", if_attendee[0], if_attendee[1], if_attendee[2], if_attendee[3], if_attendee[4], if_attendee[5], if_attendee[6], if_attendee[7]]
             elif if_admin:
-                print("Login successful!")
                 return ["Administrator", if_admin[0], if_admin[1], if_admin[2], if_admin[3]]
             else:
-                print("Login failed. Please try again.")
+                return None
 
         except Error as e:
-            print(f"Error code: {e}")
+            print(f"❌ Error code: {e} ❌\n")
 
     def check_email_exists(self, email):
         try:
@@ -348,14 +383,14 @@ class BanquetDatabase:
             return False
 
         except Error as e:
-            print(f"Error code: {e}")
+            print(f"❌ Error code: {e} ❌\n")
             return False
 
     def drop_database(self):
         try:
             self.cursor.execute(f"DROP DATABASE IF EXISTS {self.database_name}")
         except Error as err:
-            print(f"Failed dropping database:\nError Code: {err}")
+            print(f"❌ Failed dropping database: ❌\nError Code: {err}\n")
 
     @staticmethod
     def create_sql_insert_file(table_name, sql_file):
@@ -505,4 +540,4 @@ class BanquetDatabase:
                 )
 
         except Error as e:
-            print(f"Error inserting test data: {e}")
+            print(f"❌ Error inserting test data: {e} ❌\n")

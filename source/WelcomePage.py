@@ -1,6 +1,13 @@
+from conda.notices.views import print_notices
+
 from AdminPage import AdminPage
 from AttendeePage import AttendeePage
 from getpass import getpass
+
+def print_user_tips():
+    print("\n" + "=" * 54)
+    print("🚪 Press: 'Enter' to leave information fields empty")
+    print("🚪 Type:  '##'    to quit any operation")
 
 class WelcomePage:
     def __init__(self, cursor, connection, database):
@@ -10,49 +17,51 @@ class WelcomePage:
         self.exit = False
 
     def display(self):
-        print("\n" + "=" * 50)
-        print("🚪 Welcome to the Banquet Registration System! 🚪")
-        print("=" * 50)
+        print("\n" + "=" * 54)
+        print("🚪 Welcome to the Banquet Registration System!      🚪")
+        print("=" * 54)
+        print("🚪 Press: 'Enter' to leave information fields empty 🚪")
+        print("🚪 Type:  '##'    to quit any operation             🚪")
+        print("=" * 54 + "\n")
+        choice = None
+        successful_operation = False
 
         while not self.exit:
-            print("Please select an option below to proceed and click enter:\n")
+            print("\n" + "=" * 54)
+            print("Please select an option below to proceed and click enter:")
             print("1️⃣  Log in to your account")
             print("2️⃣  Register as a new attendee")
-            print("3️⃣  Exit the system\n")
-            print("=" * 50)
+            print("3️⃣  Exit the system")
+            print("=" * 54 + "\n")
 
             choice = input("👉 Enter your choice (1/2/3): ").strip()
 
             successful_operation = False
             if choice == '1':
-                print("\n" + "=" * 50)
+                print_user_tips()
+                print("=" * 54)
                 print("🔑 Login to Your Account")
-                print("    ## to quit anytime")
-                print("=" * 50 + "\n")
+                print("=" * 54 + "\n")
                 while not successful_operation:
                     successful_operation = self.login()
             elif choice == '2':
-                print("\n" + "=" * 50)
+                print_user_tips()
+                print("=" * 54)
                 print("📝 Register as a New Attendee")
-                print("    ## to quit anytime\n")
-                print("=" * 50 + "\n")
+                print("=" * 54 + "\n")
                 while not successful_operation:
                     successful_operation = self.register_attendee()
             elif choice == '3':
                 self.exit_program()
             else:
-                print("\n❌ Invalid choice. Please try again. ❌")
+                print("❌ Invalid choice. Please try again. ❌\n")
 
     def login(self):
-        email = input("📧 Enter Email: ").strip()
-
+        email = self.database.input_email()
         if self.database.back(email):
             return True
 
-        #TODO switch to getpass on delivery
-        #password = getpass("🔒 Enter Password (your password is invisible): ").strip()
-        password = input("🔒 Enter Password: ").strip()
-
+        password = self.database.input_password()
         if self.database.back(password):
             return True
 
@@ -60,15 +69,15 @@ class WelcomePage:
         user_type = self.database.check_email(email, password)
 
         if not user_type:
-            print("\n❌ Invalid email or password. Please check your credentials and try again. ❌\n")
+            print("❌ Invalid email or password. Please check your credentials and try again. ❌\n")
             return False
         elif user_type[0] == "Administrator":
-            print("\n✅ Login successful! Welcome self.database.back, Administrator! ✅")
+            print("✅ Login successful! Welcome back Administrator! ✅")
             admin_page = AdminPage(self.cursor, self.connection, email, self.database)
             admin_page.display()
             return True
         elif user_type[0] == "Attendee":
-            print("\n✅ Login successful! Welcome self.database.back, Attendee! ✅\n")
+            print("✅ Login successful! Welcome back Attendee! ✅\n")
             attendee_page = AttendeePage(self.cursor, self.connection, email, self.database)
             attendee_page.display()
             return True
@@ -118,8 +127,8 @@ class WelcomePage:
 
     def exit_program(self):
         self.exit = True
-        print("\n" + "=" * 50)
+        print("=" * 54)
         print("👋 Thank you for using the Banquet Registration System!")
         print("Goodbye! Have a great day! 🌟")
-        print("=" * 50)
+        print("=" * 54)
         exit()
