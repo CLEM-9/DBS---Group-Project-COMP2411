@@ -1,4 +1,5 @@
 from crud_operations import *
+from datetime import datetime
 import numpy as np
 from mysql.connector import Error
 import pandas as pd
@@ -296,6 +297,42 @@ class BanquetDatabase:
             if staff_email and self.is_valid_email(staff_email):
                 return staff_email
             print("❌ Staff Email is required. Please enter a valid email ❌\n")
+
+    def get_valid_date(self, prompt, allow_empty=False):
+        date_input = None
+        while not self.back(date_input):
+            date_input = input(prompt).strip()
+            if allow_empty and not date_input:
+                return None
+            try:
+                return datetime.strptime(date_input, "%Y-%m-%d").date()
+            except ValueError:
+                print("\n❌ Invalid date format. Please use YYYY-MM-DD.")
+        return date_input
+
+    def get_valid_time(self, prompt, allow_empty=False):
+        time_input = None
+        while not self.back(time_input):
+            time_input = input(prompt).strip()
+            if allow_empty and not time_input:
+                return None
+            try:
+                datetime.strptime(time_input, "%H:%M:%S")
+                return time_input
+            except ValueError:
+                print("\n❌ Invalid time format. Please use HH:MM:SS.")
+        return time_input
+
+    def get_valid_number(self, prompt, allow_empty=False):
+        number_input = None
+        while not self.back(number_input):
+            number_input = input(prompt).strip()
+            if allow_empty and not number_input:
+                return None
+            if number_input.isdigit():
+                return int(number_input)
+            print("\n❌ Please enter a valid number.")
+        return number_input
 
     def check_connection(self):
         if self.connection is None:

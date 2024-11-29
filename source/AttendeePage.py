@@ -83,11 +83,21 @@ class AttendeePage:
         print("Enter the details to filter, or leave fields blank to skip.\n")
         print("📝 Note down the Banquet ID which you want to register.")
 
-        #TODO verify correctness of parameters
-        banquet_name = input("🏷️  Banquet Name: ").strip()
-        banquet_date = input("📅 Banquet Date (YYYY-MM-DD): ").strip()
-        banquet_address = input("🏠 Banquet Address: ").strip()
-        banquet_location = input("📍 Banquet Location: ").strip()
+        banquet_name = self.db.input_banquet_name(empty_not_allowed= False)
+        if self.db.back(banquet_name):
+            return True
+
+        banquet_date = self.db.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ", allow_empty=True)
+        if self.db.back(banquet_date):
+            return True
+
+        banquet_address = self.db.input_address(empty_not_allowed= False)
+        if self.db.back(banquet_address):
+            return True
+
+        banquet_location = self.db.input_location(empty_not_allowed= False)
+        if self.db.back(banquet_location):
+            return True
 
         print("\nSearching for banquets... 🔄")
         if not (banquet_name or banquet_date or banquet_address or banquet_location):

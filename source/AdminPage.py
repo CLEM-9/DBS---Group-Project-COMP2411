@@ -1,6 +1,5 @@
 from crud_operations import ReportGeneration
 from datetime import datetime
-from mysql.connector import Error
 import pandas as pd
 import matplotlib.pyplot as plt
 from tabulate import tabulate
@@ -72,11 +71,11 @@ class AdminPage:
         if self.db.back(banquet_name):
             return True
 
-        banquet_date = self.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ")
+        banquet_date = self.db.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ")
         if self.db.back(banquet_date):
             return True
 
-        banquet_time = self.get_valid_time("⏰ Enter Banquet Time (HH:MM:SS): ")
+        banquet_time = self.db.get_valid_time("⏰ Enter Banquet Time (HH:MM:SS): ")
         if self.db.back(banquet_time):
             return True
 
@@ -88,7 +87,7 @@ class AdminPage:
         if self.db.back(banquet_address):
             return True
 
-        banquet_seats = self.get_valid_number("💺 Enter Total Seats: ")
+        banquet_seats = self.db.get_valid_number("💺 Enter Total Seats: ")
         if self.db.back(banquet_seats):
             return True
 
@@ -132,7 +131,7 @@ class AdminPage:
                 if self.db.banquet_meal.check_meal_exists(banquet_id, meal_name):
                     print("\n❌ Meal already exists in the banquet. Please select a different meal.")
                     continue
-                meal_price = self.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
+                meal_price = self.db.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
                 self.db.banquet_meal.create(banquet_id, meal_name, meal_price)
                 print(f"✅ Meal '{meal_name}' added successfully.\n")
                 break
@@ -182,7 +181,7 @@ class AdminPage:
                 if self.db.banquet_drink.check_drink_exists(banquet_id, drink_name):
                     print("\n❌ Drink already exists in the banquet. Please select a different drink.")
                     continue
-                meal_price = self.get_valid_number(f"💵 Enter Price for '{drink_name}': ")
+                meal_price = self.db.get_valid_number(f"💵 Enter Price for '{drink_name}': ")
                 print(self.db.banquet_drink.create(banquet_id, drink_name, meal_price))
                 break
         print("\n✅ Drinks added successfully")
@@ -222,7 +221,7 @@ class AdminPage:
         banquet_name = self.db.input_banquet_name(False)
         if self.db.back(banquet_name):
             return True
-        banquet_date = self.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ", True)
+        banquet_date = self.db.get_valid_date("📅 Enter Banquet Date (YYYY-MM-DD): ", True)
         if self.db.back(banquet_date):
             return True
         banquet_address = self.db.input_address(False)
@@ -327,7 +326,7 @@ Banquet {i}:
                         if self.db.banquet_meal.check_meal_exists(banquet_id, meal_name):
                             print("\n❌ Meal already exists in the banquet. Please select a different meal.")
                         elif self.validate_meal_name(meal_name):
-                            meal_price = self.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
+                            meal_price = self.db.get_valid_number(f"💵 Enter Price for '{meal_name}': ")
                             print(self.db.banquet_meal.create(banquet_id, meal_name, meal_price))
                             print(f"✅ Meal '{meal_name}' added successfully.")
                             break
@@ -539,42 +538,6 @@ Banquet {i}:
         plt.tight_layout()
         plt.show()
         return True
-
-    def get_valid_date(self, prompt, allow_empty=False):
-        date_input = None
-        while not self.db.back(date_input):
-            date_input = input(prompt).strip()
-            if allow_empty and not date_input:
-                return None
-            try:
-                return datetime.strptime(date_input, "%Y-%m-%d").date()
-            except ValueError:
-                print("\n❌ Invalid date format. Please use YYYY-MM-DD.")
-        return date_input
-
-    def get_valid_time(self, prompt, allow_empty=False):
-        time_input = None
-        while not self.db.back(time_input):
-            time_input = input(prompt).strip()
-            if allow_empty and not time_input:
-                return None
-            try:
-                datetime.strptime(time_input, "%H:%M:%S")
-                return time_input
-            except ValueError:
-                print("\n❌ Invalid time format. Please use HH:MM:SS.")
-        return time_input
-
-    def get_valid_number(self, prompt, allow_empty=False):
-        number_input = None
-        while not self.db.back(number_input):
-            number_input = input(prompt).strip()
-            if allow_empty and not number_input:
-                return None
-            if number_input.isdigit():
-                return int(number_input)
-            print("\n❌ Please enter a valid number.")
-        return number_input
 
     def logout(self):
         self.userLogged = False
