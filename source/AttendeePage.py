@@ -80,7 +80,6 @@ class AttendeePage:
         print("=" * 54)
         print("🔍 Search for a Banquet")
         print("=" * 54)
-        print("Enter the details to filter, or leave fields blank to skip.\n")
         print("📝 Note down the Banquet ID which you want to register.")
 
         banquet_name = self.db.input_banquet_name(empty_not_allowed= False)
@@ -100,16 +99,14 @@ class AttendeePage:
             return True
 
         print("\nSearching for banquets... 🔄")
-        if not (banquet_name or banquet_date or banquet_address or banquet_location):
-            result = self.db.banquet.read()
-        else:
-            result = self.db.banquet.read_by_filter(banquet_name, banquet_date, banquet_location, banquet_address)
+
+        result = self.db.banquet.read_by_filter(banquet_name, banquet_date, banquet_location, banquet_address)
 
         if result:
             print("\n✅ Search Results:\n")
             for i, banquet in enumerate(result, start=1):
-                banquet_date_time = f"{banquet[5]} at {banquet[6]}"
-                available = "Yes" if int(banquet[7]) else "No"
+                banquet_date_time = f"{banquet[4]} at {banquet[5]}"
+                available = "Yes" if banquet[6] else "No"
                 print(f"""
 Banquet {i}:
     🆔 BID: {banquet[0]}
@@ -118,7 +115,7 @@ Banquet {i}:
     📍 Location: {banquet[3]}
     📅 Date & Time: {banquet_date_time}
     🟢 Available: {available}
-    🪑 Total Seats: {banquet[8]}
+    🪑 Total Seats: {banquet[7]}
     """)
         else:
             print("\n❌ No banquets found matching the criteria.")
@@ -277,37 +274,46 @@ Banquet {i}:
         return True
 
     def delete_registration(self):
-        BID = input("🆔 Enter Banquet ID to delete the registration: ").strip()
-        if not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
-            print("❌ You have not registered for this banquet.")
-            return False
-        elif not BID:
-            print("❌ Banquet ID is required to delete registration.")
-            return False
-        else:
-            choice = input("❓ Are you sure you want to delete a registration? (Yes/No): ").strip()
-            if choice.lower() == 'no':
-                print("Registration NOT deleted")
+        print_user_tips()
+        print("=" * 54)
+        print("✏️ Delete your Registration")
+        print("=" * 54)
+        while True:
+            BID = input("🆔 Enter Banquet ID to delete the registration: ").strip()
+            if self.db.back(BID):
                 return True
-            elif choice.lower() == 'yes':
-                result = self.db.user_banquet_registration.delete(BID, self.email)
-                print(result)
-                return True
-        return True
+            if not BID:
+                print("❌ Banquet ID is required to delete registration.\n")
+                continue
+            elif not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
+                print("❌ You have not registered for this banquet.\n")
+                continue
+            else:
+                choice = input("❓ Are you sure you want to delete a registration? (Yes/No): ").strip().lower()
+                if choice == 'no':
+                    print("Registration NOT deleted")
+                elif choice == 'yes':
+                    result = self.db.user_banquet_registration.delete(BID, self.email)
+                    print(result)
+            return True
 
     def edit_registration(self):
         print_user_tips()
         print("=" * 54)
         print("✏️ Edit your Registration")
         print("=" * 54)
-        print("Enter the details to update, or press enter to skip but you have to provide a Banquet ID\n")
-        BID = input("🆔 Enter Banquet ID: ").strip()
-        if not BID:
-            print("❌ Banquet ID is required to update registration.")
-            return False
-        elif not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
-            print("❌ You have not registered for this banquet or there is no Banquet with this BID.")
-            return False
+        print("Enter the details to update, or press enter to skip but you have to provide a Banquet ID")
+
+        while True:
+            BID = input("🆔 Enter Banquet ID: ").strip()
+            if self.db.back(BID):
+                break
+            if not BID:
+                print("❌ Banquet ID is required to update registration.\n")
+                continue
+            elif not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
+                print("❌ You have not registered for this banquet or there is no Banquet with this BID.\n")
+                continue
 
         meals = self.db.banquet_meal.show_meals(BID)  # Fetch meals for the banquet
         if not meals:

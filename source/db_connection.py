@@ -19,18 +19,18 @@ def get_db_connection(DB_NAME):
         #TODO switch to getpass for final version, getpass doesn't work on PYCHARM IDE
         #password = getpass("👉 Enter your MySQL password: ")
         password = input("👉 Enter your MySQL password: ")
-        print("Trying to connect to database...")
+        print("\nTrying to connect to database...")
 
         # Attempt to establish a connection
         connection = mysql.connector.connect(
             host='localhost',
-            user='test_user',
+            user='root',
             password=password
         )
         cursor = connection.cursor()
 
         if connection.is_connected():
-            print("\n✅ Successfully connected to the MySQL database.")
+            print("✅ Successfully connected to the MySQL database.\n")
             return connection, cursor
         else:
             print("\n❌ Failed to connect to the MySQL database. Please check your credentials.")

@@ -1,6 +1,6 @@
--------------------------------------
--- REMEMBER TO CHANGE None TO NULL --
--------------------------------------
+-- ----------------------------------
+-- REMEMBER TO CHANGE NULL TO NULL --
+-- ----------------------------------
 
 -- Attendees INSERT STATEMENT
 INSERT INTO Attendees(email, password, address, lastName, firstName, phone, attendeeType, affiliateOrganization)
@@ -207,10 +207,6 @@ VALUES
 	('emily.patel@email.com', 'IXozzdrH', '75 Oak St', 'Patel', 'Emily', 70263927, 'Alumni', 'PolyU');
 
 
--------------------------------------
--- REMEMBER TO CHANGE NULL TO NULL --
--------------------------------------
-
 -- Administrators INSERT STATEMENT
 INSERT INTO Administrators(adminEmail, adminName, adminLastName, adminPassword)
 VALUES
@@ -316,10 +312,6 @@ VALUES
 	('william.white@adminportal.com', 'William', 'White', 'Pass9393');
 
 
--------------------------------------
--- REMEMBER TO CHANGE NULL TO NULL --
--------------------------------------
-
 -- Banquet INSERT STATEMENT
 INSERT INTO Banquet(BID, banquetName, address, location, staffEmail, banquetDate, banquetTime, available, totalSeats, registeredUsers)
 VALUES
@@ -374,10 +366,6 @@ VALUES
 	(49, 'Chess Championship', '151 Mountain Ridge', 'Cleveland', 'amit.chen@example.com', Timestamp('2024-11-16 00:00:00'), '14:00:00', 1, 100, 0),
 	(50, 'Food Festival', '252 Hill Top', 'Dallas', 'vsuwx.tkmnt@example.com', Timestamp('2024-12-15 00:00:00'), '11:00:00', 1, 500, 0);
 
-
--------------------------------------
--- REMEMBER TO CHANGE NULL TO NULL --
--------------------------------------
 
 -- Meal INSERT STATEMENT
 INSERT INTO Meal(mealName, special, type)
@@ -434,10 +422,6 @@ VALUES
 	('Beef Tacos', 'Premium Quality', 'Beef');
 
 
--------------------------------------
--- REMEMBER TO CHANGE NULL TO NULL --
--------------------------------------
-
 -- Drink INSERT STATEMENT
 INSERT INTO Drink(drinkName, isAlcoholic)
 VALUES
@@ -492,10 +476,6 @@ VALUES
 	('Negroni', 1),
 	('Old Fashioned', 1);
 
-
--------------------------------------
--- REMEMBER TO CHANGE NULL TO NULL --
--------------------------------------
 
 -- BanquetMeals INSERT STATEMENT
 INSERT INTO BanquetMeals(bid, mealName, price)
@@ -702,10 +682,6 @@ VALUES
 	(50, 'Vegetarian Pizza', 19);
 
 
--------------------------------------
--- REMEMBER TO CHANGE NULL TO NULL --
--------------------------------------
-
 -- BanquetDrinks INSERT STATEMENT
 INSERT INTO BanquetDrinks(BID, drinkName, price)
 VALUES
@@ -860,10 +836,6 @@ VALUES
 	(50, 'Tequila', 22),
 	(50, 'Cider', 7);
 
-
--------------------------------------
--- REMEMBER TO CHANGE NULL TO NULL --
--------------------------------------
 
 -- UserBanquetRegistration INSERT STATEMENT
 INSERT INTO UserBanquetRegistration(BID, email, mealName, alcoholicDrink, seatAssigned, specialNeeds, regDateTime, seatingPreference1, seatingPreference2)

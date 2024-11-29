@@ -71,7 +71,7 @@ class Attendees(Tables):
     def update(self, emailID, email= None, password= None, phone= None, firstName= None, lastName= None, address= None, attendeeType= None, affiliateOrganization= None):
         sql = "UPDATE Attendees SET "
         values = []
-        message = "Following fields are successfully updated:\n"
+        message = "\nFollowing fields are successfully updated:\n"
 
                 # Update fields dynamically
         if email:

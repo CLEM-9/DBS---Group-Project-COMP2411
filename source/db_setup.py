@@ -99,8 +99,7 @@ class BanquetDatabase:
                 "  PRIMARY KEY (BID, email),"
                 "  CHECK (seatingPreference1 LIKE '%_@_%._%'),"
                 "  CHECK (seatingPreference2 LIKE '%_@_%._%'),"
-                "  FOREIGN KEY (BID) REFERENCES BanquetMeals(BID) ON DELETE CASCADE ON UPDATE CASCADE,"
-                "  FOREIGN KEY (mealName) REFERENCES BanquetMeals(mealName) ON UPDATE CASCADE ON DELETE CASCADE,"
+                "  FOREIGN KEY (BID, mealName) REFERENCES BanquetMeals(BID, mealName) ON DELETE CASCADE ON UPDATE CASCADE,"
                 "  FOREIGN KEY (email) REFERENCES Attendees(email) ON UPDATE CASCADE ON DELETE RESTRICT"
                 ")"
         }
@@ -239,12 +238,16 @@ class BanquetDatabase:
                 return drink_name
             print("❌ Invalid drink name. Beware of Caps. Please choose from the list above: ❌\n")
 
-    def input_alcoholic_drink(self):
-        alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
-        while alcoholic_drink not in ["yes", "no"] and not self.back(alcoholic_drink):
+    def input_alcoholic_drink(self, empty_not_allowed = True):
+        while True:
+            alcoholic_drink= input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
+            if not (empty_not_allowed or alcoholic_drink):
+                return None
+            if self.back(alcoholic_drink):
+                return alcoholic_drink
+            if alcoholic_drink in ["yes", "no"]:
+                return alcoholic_drink
             print("❌ Invalid choice. Please enter 'Yes' or 'No' ❌\n")
-            alcoholic_drink = input("🍷 Do you want an alcoholic drink? (Yes/No): ").strip().lower()
-        return alcoholic_drink
 
     def input_seating_preference(self, word = "first"):
         # Validate seating preferences
@@ -358,6 +361,9 @@ class BanquetDatabase:
         sql_file = None
         if not os.path.exists(sql_file_path):
             sql_file = open(sql_file_path, "w")
+            sql_file.write("-- ----------------------------------\n")
+            sql_file.write(f"-- REMEMBER TO CHANGE None TO NULL --\n")
+            sql_file.write("-- ----------------------------------\n\n")
 
         self.check_connection()
         print("\nPlease wait, populating database with test data...")
@@ -440,9 +446,6 @@ class BanquetDatabase:
         sql_statement_query = f"INSERT INTO {table_name}({columns_placeholder})\nVALUES"
 
         # Builds the sql statement from the excell file
-        sql_file.write("-------------------------------------\n")
-        sql_file.write(f"-- REMEMBER TO CHANGE None TO NULL --\n")
-        sql_file.write("-------------------------------------\n\n")
         sql_file.write(f"-- {table_name} INSERT STATEMENT\n")
         sql_file.write(sql_statement_query)
 

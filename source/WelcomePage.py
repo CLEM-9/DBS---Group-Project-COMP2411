@@ -1,8 +1,5 @@
-from conda.notices.views import print_notices
-
 from AdminPage import AdminPage
 from AttendeePage import AttendeePage
-from getpass import getpass
 
 def print_user_tips():
     print("\n" + "=" * 54)
@@ -19,15 +16,12 @@ class WelcomePage:
     def display(self):
         print("\n" + "=" * 54)
         print("🚪 Welcome to the Banquet Registration System!      🚪")
-        print("=" * 54)
-        print("🚪 Press: 'Enter' to leave information fields empty 🚪")
-        print("🚪 Type:  '##'    to quit any operation             🚪")
         print("=" * 54 + "\n")
         choice = None
         successful_operation = False
 
         while not self.exit:
-            print("\n" + "=" * 54)
+            print("=" * 54)
             print("Please select an option below to proceed and click enter:")
             print("1️⃣  Log in to your account")
             print("2️⃣  Register as a new attendee")

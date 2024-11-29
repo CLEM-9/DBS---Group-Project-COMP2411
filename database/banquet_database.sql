@@ -80,11 +80,8 @@ CREATE TABLE IF NOT EXISTS UserBanquetRegistration(
     PRIMARY KEY (BID, email),
     CHECK (seatingPreference1 LIKE '%_@_%._%'),
     CHECK (seatingPreference2 LIKE '%_@_%._%'),
-    FOREIGN KEY (BID) REFERENCES BanquetMeals(BID)
+    FOREIGN KEY (BID, mealName) REFERENCES BanquetMeals(BID, mealName)
         ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    FOREIGN KEY (mealName) REFERENCES BanquetMeals(mealName)
-        ON DELETE RESTRICT
         ON UPDATE CASCADE,
     FOREIGN KEY (email) REFERENCES Attendees(email)
         ON UPDATE CASCADE

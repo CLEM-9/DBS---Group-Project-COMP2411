@@ -2,6 +2,7 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/database/banquet_database.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/database/insert_query.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/source/crud_operations.py" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/source/db_setup.py" dialect="MySQL" />
   </component>
