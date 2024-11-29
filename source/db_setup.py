@@ -221,26 +221,21 @@ class BanquetDatabase:
                 return affiliate_organization
             print("❌ Organization name is required. Please provide a valid name. ❌\n")
 
+    # input must be a list of ["Meal1", "Meal2", ... , "Meal n"]
     def input_meal_name(self, available_meals, empty_not_allowed=True):
-        all_meals = []
-        for meal in available_meals:
-            # Extract the first part of each meal description before the first comma
-            first_meal = meal.split(',')[0].strip()
-            all_meals.append(first_meal)
-
         while True:
             meal_name = input("👉 Enter Meal Name: ").strip()
             if not (empty_not_allowed or meal_name):
                 return None
             if self.back(meal_name):
                 return meal_name
-            if meal_name in all_meals:
+            if meal_name in available_meals:
                 return meal_name
             print("❌ Invalid meal name. Beware of Caps. Please choose from the list above: ❌\n")
 
     def input_drink_name(self, alcoholic, alcohol_free):
         while True:
-            drink_name = input("👉 Enter Drink Name: ").strip()
+            drink_name = input("\n👉 Enter Drink Name: ").strip()
             if not drink_name or self.back(drink_name) or (drink_name in alcoholic) or (drink_name in alcohol_free):
                 return drink_name
             print("❌ Invalid drink name. Beware of Caps. Please choose from the list above: ❌\n")
@@ -290,7 +285,8 @@ class BanquetDatabase:
                 return banquet_location
             print("❌ Banquet Location is required. Please enter a valid Location ❌\n")
 
-    def is_alphanumeric(self, text):
+    @staticmethod
+    def is_alphanumeric(text):
         return all(char.isalnum() or char.isspace() for char in text)
 
     def validate_staff(self, staff_email):
@@ -344,7 +340,7 @@ class BanquetDatabase:
                 return None
             if number_input.isdigit():
                 return int(number_input)
-            print("\n❌ Please enter a valid number.")
+            print("❌ Please enter a valid number.\n")
         return number_input
 
     def check_connection(self):

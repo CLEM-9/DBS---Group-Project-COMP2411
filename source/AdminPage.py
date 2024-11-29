@@ -119,8 +119,11 @@ class AdminPage:
         print("\n" + "=" * 50)
         print("🍽️ Add Meals to Banquet")
         print("=" * 50)
-        available_meals = self.db.meal.read().split('\n')
-        meal_names = [meal.split(',')[0].strip() for meal in available_meals]
+        read_meals = self.db.meal.read().split("\n")
+
+        # Gets list of only meals
+        meal_names = [meal.split(',')[0].strip() for meal in read_meals]
+
         print("\nAvailable Meals:\n")
         items_per_row = 3
         for i in range(0, len(meal_names), items_per_row):
@@ -130,7 +133,7 @@ class AdminPage:
         print("\nYou must assign four meals to the banquet.")
         for i in range(1, 5):
             while True:
-                meal_name = self.db.input_meal_name(available_meals)
+                meal_name = self.db.input_meal_name(meal_names)
                 if self.db.back(meal_name):
                     self.db.banquet.delete(banquet_id)
                     return False

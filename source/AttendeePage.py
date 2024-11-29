@@ -62,14 +62,29 @@ class AttendeePage:
 
         # false parameter means the input can be null
         email = self.db.input_email(empty_not_allowed= False) or self.email
+        if self.db.back(email): return True
+
         password = self.db.input_password(empty_not_allowed= False) or None
+        if self.db.back(password): return True
+
         first_name = self.db.input_name("First", empty_not_allowed= False) or None
+        if self.db.back(first_name): return True
+
         last_name = self.db.input_name("Last", empty_not_allowed= False) or None
+        if self.db.back(last_name): return True
+
         phone = self.db.input_phone(empty_not_allowed= False) or None
+        if self.db.back(phone): return True
+
         address = self.db.input_address(empty_not_allowed= False) or None
+        if self.db.back(address): return True
+
         attendee_type = self.db.input_attendee_type(empty_not_allowed= False) or None
+        if self.db.back(attendee_type): return True
+
         affiliate_organization = self.db.input_affiliate_organization(empty_not_allowed= False) or None
-        
+        if self.db.back(affiliate_organization): return True
+
         result = self.db.attendees.update(self.email, email, password, phone, first_name, last_name, address,
                                        attendee_type, affiliate_organization)
         print(result)
@@ -160,21 +175,27 @@ Banquet {i}:
 
         # Show available meals
         print("\n🍽️  Banquet Meals:")
-        print("\n".join([f"{meal[0]}, ${meal[1]:.2f}" for meal in banquet_meals]))
+        print("\n".join([f"\t{meal[0]}, ${meal[1]:.2f}" for meal in banquet_meals]) + "\n")
+
+        # Formats meal lists to pass into input_meal_name
+        available_meals = []
+        for meal in banquet_meals:
+            available_meals.append(meal[0])
 
         # Extract only the meal names for validation
-        meal_name = self.db.input_meal_name(banquet_meals)
+        meal_name = self.db.input_meal_name(available_meals)
         if self.db.back(meal_name):
             return True
 
         # Display available Drinks
         print("\n🍽️  Banquet Drinks:")
-        print("\n".join([f"{drink[0]}, ${drink[1]:.2f}" for drink in banquet_drinks]))
+        print("\n".join([f"\n{drink[0]}, ${drink[1]:.2f}" for drink in banquet_drinks]) + "\n")
 
         alcoholic_drink = self.db.input_alcoholic_drink()
         if self.db.back(alcoholic_drink):
             return True
-        alcoholic_drink = (alcoholic_drink == "yes")    # saved as bit -> if "yes" then 1 else 0
+        if alcoholic_drink:
+            alcoholic_drink = (alcoholic_drink == "yes")    # saved as bit -> if "yes" then 1 else 0
 
         # Collect additional information
         special_needs = input("💬 Special Needs (or press Enter for None): ").strip() or "None"
@@ -311,9 +332,12 @@ Banquet {i}:
             if not BID:
                 print("❌ Banquet ID is required to update registration.\n")
                 continue
-            elif not self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
-                print("❌ You have not registered for this banquet or there is no Banquet with this BID.\n")
+            if not BID.isdigit():
+                print("❌ Please enter a valid BID.\n")
                 continue
+            if self.db.user_banquet_registration.read_by_user_and_banquet(self.email, BID):
+                break
+            print("❌ You have not registered for this banquet or there is no Banquet with this BID.\n")
 
         meals = self.db.banquet_meal.show_meals(BID)  # Fetch meals for the banquet
         if not meals:
@@ -328,7 +352,12 @@ Banquet {i}:
         print("\n🍽️  Banquet Meals:")
         print("\n".join([f"\t\t{meal[0]}, ${meal[1]:.2f}" for meal in meals]) + "\n")
 
-        meal_name = self.db.input_meal_name(meals, False) #false means can be null
+        # Formats available_meals to be passed to the funct
+        available_meals = []
+        for meal in meals:
+            available_meals.append(meal[0])
+
+        meal_name = self.db.input_meal_name(available_meals, empty_not_allowed=False) #false means can be null
         if self.db.back(meal_name):
             return True
 
@@ -339,7 +368,8 @@ Banquet {i}:
         alcoholic_drink = self.db.input_alcoholic_drink(empty_not_allowed=False)
         if self.db.back(alcoholic_drink):
             return True
-        alcoholic_drink = (alcoholic_drink == "yes")
+        if alcoholic_drink:
+            alcoholic_drink = (alcoholic_drink == "yes")
 
         special_needs = input("💬 Special Needs (or press Enter for None): ").strip() or None
 
