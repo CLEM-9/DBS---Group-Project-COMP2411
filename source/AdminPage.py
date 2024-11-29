@@ -4,6 +4,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 
+def print_user_tips():
+    print("\n" + "=" * 54)
+    print("🚪 Press: 'Enter' to leave information fields empty")
+    print("🚪 Type:  '##'    to quit any operation")
+
 class AdminPage:
     def __init__(self, cursor, connection, email, database):
         self.cursor = cursor
@@ -62,9 +67,9 @@ class AdminPage:
 
     # This method is called when the admin wants to create a new banquet
     def create_banquet(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 50)
         print("🎉 Create a New Banquet")
-        print("## to quit anytime")
         print("=" * 50)
 
         banquet_name = self.db.input_banquet_name()
@@ -163,7 +168,7 @@ class AdminPage:
         print("\nAlcohol FREE Drinks:")
         print("".join(f"\t{drink}\n" for drink in non_alcoholic_drinks))
 
-        print("At least one drink must be assigned.\nType ## to terminate\n")
+        print("At least one drink must be assigned.\n")
         for i in range(0, total_drinks):
             while True:
                 drink_name = self.db.input_drink_name(alcoholic_drinks, non_alcoholic_drinks)
@@ -194,7 +199,8 @@ class AdminPage:
         return meal_name in available_meal_names
     
     def delete_banquet(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 50)
         print("🗑️ Delete a Banquet")
         print("=" * 50)
         
@@ -213,7 +219,8 @@ class AdminPage:
              
     # This method is called when the admin wants to search for a banquet      
     def search_banquets(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 50)
         print("🔍 Search for a Banquet")
         print("=" * 50)
         print("Enter the details to search, or leave fields blank to skip.\n")
@@ -257,6 +264,12 @@ Banquet {i}:
     
     # This method is called when the admin wants to edit a banquet   
     def edit_banquet(self):
+        print_user_tips()
+        print("=" * 54)
+        print("✏️ Edit Banquet")
+        print("=" * 54)
+        print("Enter the details to search, or leave fields blank to skip.\n")
+
         banquet_id = input("\n🆔 Enter the Banquet ID you want to edit: ").strip()
         # Check if the banquet ID is valid
         if not banquet_id.isdigit():
@@ -341,7 +354,8 @@ Banquet {i}:
     
     # This method is called when the admin wants to search for attendees 
     def search_attendees(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 50)
         print("🔍 Search for Attendees")
         print("=" * 50)
         search_query = self.db.input_email(False)
@@ -375,6 +389,11 @@ Banquet {i}:
 
     # This method is called when the admin wants to edit an attendee's information
     def edit_attendee_info(self, attendee_email=None):
+        print_user_tips()
+        print("=" * 54)
+        print("✏️ Edit Attendee Info")
+        print("=" * 54)
+
         if not attendee_email:
             print("\n" + "=" * 50)
             print("✏️ Edit Attendee Information")
@@ -424,7 +443,8 @@ Banquet {i}:
 
     # This method is called when the admin wants to generate a registration status report
     def generate_report(self):
-        print("\n" + "=" * 50)
+        print_user_tips()
+        print("=" * 50)
         print("📊 Generate Reports")
         print("=" * 50)
         print("1️⃣ Registration Status")

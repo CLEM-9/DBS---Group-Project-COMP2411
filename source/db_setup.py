@@ -129,7 +129,7 @@ class BanquetDatabase:
         # Use a regular expression to check if the string contains only a-z, A-Z, and 0-9
         return bool(re.fullmatch(r'[a-zA-Z0-9]+', string))
 
-    def input_email(self, check_existence = True, empty_not_allowed = True):
+    def input_email(self, check_existence = True, empty_not_allowed = True, new_registration= False):
         while True:
             email = input("📧 Enter Email: ").strip()
             if not (empty_not_allowed or email):
@@ -139,9 +139,15 @@ class BanquetDatabase:
             if self.is_valid_email(email):
                 if check_existence:
                     if self.check_email_exists(email):
-                        return email
+                        if not new_registration:
+                            return email
+                        else:
+                            print("❌ This email is already registered. Please log in or use a different email to register. ❌\n")
                     else:
-                        print("❌ This email is already registered. Please log in or use a different email to register. ❌\n")
+                        if new_registration:
+                            return email
+                        else:
+                            print("❌ This email is not registered. ❌\n")
                 else:
                     return email
             else:
@@ -189,7 +195,7 @@ class BanquetDatabase:
                 return None
             if self.back(address):
                 return address
-            if address and self.is_valid_email(address):
+            if address and self.is_alphanumeric(address):
                 return address
             print("❌ Address is invalid. Please enter a valid address. ❌\n")
 
@@ -414,11 +420,11 @@ class BanquetDatabase:
         try:
             # Query attendees
             self.cursor.execute("SELECT * FROM Attendees WHERE email = %s", [email])
-            if_attendee = self.cursor.fetchone()
+            if_attendee = bool(self.cursor.fetchone())
 
             # Query administrators
             self.cursor.execute("SELECT * FROM Administrators WHERE adminEmail = %s", [email])
-            if_admin = self.cursor.fetchone()
+            if_admin = bool(self.cursor.fetchone())
 
             # Check existence
             if if_attendee or if_admin:

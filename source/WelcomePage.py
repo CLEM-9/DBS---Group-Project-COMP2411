@@ -26,7 +26,7 @@ class WelcomePage:
             print("1️⃣  Log in to your account")
             print("2️⃣  Register as a new attendee")
             print("3️⃣  Exit the system")
-            print("=" * 54 + "\n")
+            print("=" * 54)
 
             choice = input("👉 Enter your choice (1/2/3): ").strip()
 
@@ -35,14 +35,14 @@ class WelcomePage:
                 print_user_tips()
                 print("=" * 54)
                 print("🔑 Login to Your Account")
-                print("=" * 54 + "\n")
+                print("=" * 54)
                 while not successful_operation:
                     successful_operation = self.login()
             elif choice == '2':
                 print_user_tips()
                 print("=" * 54)
                 print("📝 Register as a New Attendee")
-                print("=" * 54 + "\n")
+                print("=" * 54)
                 while not successful_operation:
                     successful_operation = self.register_attendee()
             elif choice == '3':
@@ -79,7 +79,7 @@ class WelcomePage:
             return False
 
     def register_attendee(self):
-        email = self.database.input_email()
+        email = self.database.input_email(new_registration=True)
         if self.database.back(email):
             return True
 

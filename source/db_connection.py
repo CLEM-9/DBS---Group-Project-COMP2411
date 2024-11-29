@@ -11,10 +11,10 @@ def get_db_connection(DB_NAME):
         tuple: (connection, cursor) if successful, otherwise (None, None).
     """
     try:
-        print("\n" + "=" * 50)
+        print("\n" + "=" * 54)
         print("🔑 Welcome to the Banquet Database Connection Setup")
         print("💡 If you need to change the MySQL username or host, edit 'db_connection.py'.")
-        print("=" * 50)
+        print("=" * 54)
 
         #TODO switch to getpass for final version, getpass doesn't work on PYCHARM IDE
         #password = getpass("👉 Enter your MySQL password: ")
