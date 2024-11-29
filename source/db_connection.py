@@ -24,7 +24,7 @@ def get_db_connection(DB_NAME):
         # Attempt to establish a connection
         connection = mysql.connector.connect(
             host='localhost',
-            user='root',
+            user='test_user',
             password=password
         )
         cursor = connection.cursor()
